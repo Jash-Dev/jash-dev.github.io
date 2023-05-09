@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure or Not? - Hacking Activity</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f0f0f0;
+    }
+    input {
+      padding: 5px;
+    }
+    #hiddenPicture {
+      display: none;
+      max-width: 80%;
+    }
+  </style>
+  <script>
+    function checkPassword() {
+      const passwords = ["password123", "qwerty", "admin2023", "StR0nG_p@55"];
+      let correctPasswords = 0;
+
+      for (let i = 1; i <= 4; i++) {
+        const inputPassword = document.getElementById("passwordInput" + i).value;
+        if (passwords.includes(inputPassword)) {
+          correctPasswords++;
+        }
+      }
+
+      if (correctPasswords === 4) {
+        alert("Access Granted! You've successfully 'hacked' the site.");
+        showPicture();
+      } else {
+        alert("Access Denied! You found " + correctPasswords + " correct passwords. Try again.");
+      }
+    }
+
+    function showPicture() {
+      document.getElementById("hiddenPicture").style.display = "block";
+    }
+  </script>
+</head>
+<body>
+  <h1>Secure or Not? - Hacking Activity</h1>
+  <p>Enter a password for each field to try to "hack" into the site:</p>
+  <p>First Hint:  password 123</p>
+  <p>Second Hint: top line of letters on your keyboard</p>
+  <p>Third Hint:  administrator, this year</p>
+  <p>Fourth Hint:  Strong Pass, (but in style)</p>
+  <input type="password" id="passwordInput1" placeholder="Enter password 1">
+  <input type="password" id="passwordInput2" placeholder="Enter password 2">
+  <input type="password" id="passwordInput3" placeholder="Enter password 3">
+  <input type="password" id="passwordInput4" placeholder="Enter password 4">
+  <br><br>
+  <button onclick="checkPassword()">Hack the Site</button>
+  <br><br>
+  <img id="hiddenPicture" src="https://i.pinimg.com/originals/c2/fb/fc/c2fbfcf9135f53a90d81838a8f5cdcf3.jpg" alt="password123, qwerty, admin2023, StR0nG_p@55">
+</body>
+</html>
