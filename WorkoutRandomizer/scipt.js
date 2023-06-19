@@ -1,15 +1,15 @@
 // Define the workout options
 const workoutOptions = [
-  { name: "Push-ups", imageUrl: "push-up-exercise.gif" },
-  { name: "Squats", imageUrl: "one-punch-man-saitama.gif" },
-  { name: "Burpees", imageUrl: "legraise.gif" },
-  { name: "Plank", imageUrl: "plank.webp" },
-  { name: "Lunges", imageUrl: "lunges.gif" },
-  { name: "Leg Raises", imageUrl: "legraise.gif" },
-  { name: "Hip Thrust", imageUrl: "vegeta-train.gif" },
-  { name: "Calf Raises", imageUrl: "pika.gif" },
-  { name: "Deep Breathing", imageUrl: "roshi.gif" },
-  { name: "Bicycle Crunches", imageUrl: "pika.gif" }
+  { name: "Push-ups", exerciseDuration: 30, restDuration: 10, imageUrl: "push-ups.jpg" },
+  { name: "Squats", exerciseDuration: 30, restDuration: 10, imageUrl: "squats.jpg" },
+  { name: "Burpees", exerciseDuration: 30, restDuration: 10, imageUrl: "burpees.jpg" },
+  { name: "Plank", exerciseDuration: 30, restDuration: 10, imageUrl: "plank.jpg" },
+  { name: "Lunges", exerciseDuration: 30, restDuration: 10, imageUrl: "lunges.jpg" },
+  { name: "Leg Raises", exerciseDuration: 30, restDuration: 10, imageUrl: "sit-ups.jpg" },
+  { name: "Hip Thrust", exerciseDuration: 30, restDuration: 10, imageUrl: "jumping-jacks.jpg" },
+  { name: "Calf Raises", exerciseDuration: 30, restDuration: 10, imageUrl: "mountain-climbers.jpg" },
+  { name: "High Knees", exerciseDuration: 30, restDuration: 10, imageUrl: "high-knees.jpg" },
+  { name: "Bicycle Crunches", exerciseDuration: 30, restDuration: 10, imageUrl: "bicycle-crunches.jpg" }
 ];
 
 // Get HTML elements
@@ -21,12 +21,13 @@ const startButton = document.getElementById("start-button");
 const settingsForm = document.getElementById("settings-form");
 const exerciseDurationInput = document.getElementById("exercise-duration");
 const restDurationInput = document.getElementById("rest-duration");
-const amountExerInput = document.getElementById("amount-exer");
 
+let intervals = 5; // Number of intervals
 let currentInterval = 0; // Current interval index
 let timerInterval; // Reference to the timer interval
 let isResting = false; // Flag to track rest periods
-let intervals, exerciseDuration, restDuration; // Moved from global to inside startWorkout function
+let exerciseDuration = parseInt(exerciseDurationInput.value); // Exercise duration in seconds
+let restDuration = parseInt(restDurationInput.value); // Rest duration in seconds
 
 // Function to update the timer display
 function updateTimer(time) {
@@ -41,22 +42,12 @@ function updateTimer(time) {
 
 // Function to start the workout
 function startWorkout() {
-  if (timerInterval) {
-    clearInterval(timerInterval); // If there is a running timer, clear it first
-  }
-
-  intervals = parseInt(amountExerInput.value);
-  exerciseDuration = parseInt(exerciseDurationInput.value);
-  restDuration = parseInt(restDurationInput.value);
-
-  if (intervals > workoutOptions.length) {
-    alert('The number of exercises requested is more than available exercises. Please reduce the number.');
-    return;
-  }
-
   currentInterval = 0;
   startButton.disabled = true;
   startButton.textContent = "Resting...";
+
+  exerciseDuration = parseInt(exerciseDurationInput.value);
+  restDuration = parseInt(restDurationInput.value);
 
   runInterval(); // Start the first interval
 }
@@ -95,7 +86,11 @@ function runInterval() {
   timerInterval = setInterval(function () {
     currentTime--;
 
-    updateTimer(currentTime);
+    if (isResting) {
+      updateTimer(currentTime);
+    } else {
+      updateTimer(currentTime);
+    }
 
     if (currentTime <= 0) {
       clearInterval(timerInterval);
@@ -114,4 +109,7 @@ startButton.addEventListener("click", startWorkout);
 // Event listener for the settings form
 settingsForm.addEventListener("submit", function (event) {
   event.preventDefault(); // Prevent form submission
+
+  exerciseDuration = parseInt(exerciseDurationInput.value);
+  restDuration = parseInt(restDurationInput.value);
 });
