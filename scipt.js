@@ -1,15 +1,15 @@
 // Define the workout options
 const workoutOptions = [
   { name: "Push-ups", exerciseDuration: 30, restDuration: 10, imageUrl: "push-up-exercise.gif" },
-  { name: "Squats", exerciseDuration: 30, restDuration: 10, imageUrl: "squats.jpg" },
-  { name: "Burpees", exerciseDuration: 30, restDuration: 10, imageUrl: "burpees.jpg" },
+  { name: "Squats", exerciseDuration: 30, restDuration: 10, imageUrl: "one-punch-man-saitama.gif" },
+  { name: "Burpees", exerciseDuration: 30, restDuration: 10, imageUrl: "Plank.webp" },
   { name: "Plank", exerciseDuration: 30, restDuration: 10, imageUrl: "plank.jpg" },
-  { name: "Lunges", exerciseDuration: 30, restDuration: 10, imageUrl: "lunges.jpg" },
-  { name: "Leg Raises", exerciseDuration: 30, restDuration: 10, imageUrl: "sit-ups.jpg" },
-  { name: "Hip Thrust", exerciseDuration: 30, restDuration: 10, imageUrl: "jumping-jacks.jpg" },
-  { name: "Calf Raises", exerciseDuration: 30, restDuration: 10, imageUrl: "mountain-climbers.jpg" },
-  { name: "Deep Breathing", exerciseDuration: 30, restDuration: 10, imageUrl: "high-knees.jpg" },
-  { name: "Bicycle Crunches", exerciseDuration: 30, restDuration: 10, imageUrl: "bicycle-crunches.jpg" }
+  { name: "Lunges", exerciseDuration: 30, restDuration: 10, imageUrl: "lunges.gif" },
+  { name: "Leg Raises", exerciseDuration: 30, restDuration: 10, imageUrl: "legraise.gif" },
+  { name: "Hip Thrust", exerciseDuration: 30, restDuration: 10, imageUrl: "vegeta train.gif" },
+  { name: "Calf Raises", exerciseDuration: 30, restDuration: 10, imageUrl: "pika.gif" },
+  { name: "Deep Breathing", exerciseDuration: 30, restDuration: 10, imageUrl: "pika.gif" },
+  { name: "Bicycle Crunches", exerciseDuration: 30, restDuration: 10, imageUrl: "pika.gif" }
 ];
 
 // Get HTML elements
