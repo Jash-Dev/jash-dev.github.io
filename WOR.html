@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+  <h1>HIIT Workout Generator</h1>
+  <div id="workout-container">
+    <h2 id="workout-title"></h2>
+    <div id="exercise-image"></div>
+    <div id="timer-container">
+      <div id="exercise-timer"></div>
+      <div id="rest-timer"></div>
+    </div>
+    <form id="settings-form">
+      <label for="exercise-duration">Exercise Duration (seconds):</label>
+      <input type="number" id="exercise-duration" min="5" max="300" value="30">
+      <br>
+      <label for="rest-duration">Rest Duration (seconds):</label>
+      <input type="number" id="rest-duration" min="5" max="300" value="10">
+    </form>
+    <button id="start-button">Start Workout</button>
+  </div>
+
+  <script src="scipt.js"></script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+body {
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  color: #333;
+}
+
+#workout-container {
+  margin: 50px auto;
+  padding: 20px;
+  border: 1px solid #333;
+  width: 300px;
+}
+
+#workout-title {
+  color: #666;
+}
+
+#timer-container {
+  margin-top: 20px;
+}
+
+#exercise-timer,
+#rest-timer {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+#start-button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #333;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+#exercise-image {
+  margin: 20px 0;
+}
+
+#exercise-image img {
+  max-width: 100%;
+  height: auto;
+  display: none;
+}
