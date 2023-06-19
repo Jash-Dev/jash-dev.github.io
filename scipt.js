@@ -1,6 +1,6 @@
 // Define the workout options
 const workoutOptions = [
-  { name: "Push-ups", exerciseDuration: 30, restDuration: 10, imageUrl: "push-ups.jpg" },
+  { name: "Push-ups", exerciseDuration: 30, restDuration: 10, imageUrl: "push-up-exercise.gif" },
   { name: "Squats", exerciseDuration: 30, restDuration: 10, imageUrl: "squats.jpg" },
   { name: "Burpees", exerciseDuration: 30, restDuration: 10, imageUrl: "burpees.jpg" },
   { name: "Plank", exerciseDuration: 30, restDuration: 10, imageUrl: "plank.jpg" },
@@ -8,7 +8,7 @@ const workoutOptions = [
   { name: "Leg Raises", exerciseDuration: 30, restDuration: 10, imageUrl: "sit-ups.jpg" },
   { name: "Hip Thrust", exerciseDuration: 30, restDuration: 10, imageUrl: "jumping-jacks.jpg" },
   { name: "Calf Raises", exerciseDuration: 30, restDuration: 10, imageUrl: "mountain-climbers.jpg" },
-  { name: "High Knees", exerciseDuration: 30, restDuration: 10, imageUrl: "high-knees.jpg" },
+  { name: "Deep Breathing", exerciseDuration: 30, restDuration: 10, imageUrl: "high-knees.jpg" },
   { name: "Bicycle Crunches", exerciseDuration: 30, restDuration: 10, imageUrl: "bicycle-crunches.jpg" }
 ];
 
