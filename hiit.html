@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang = "en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name ="viewport" content="width = device-width, initial-scale= 1.0">
+        <title>Random HIIT Generator</title>
+
+    </head>
+    <body>
+        <h2>HIIT Workout Generator</h2>
+       <div><label for="workoutDuration">Workout Duration (in seconds)</label>
+        <input type="number" id="workoutDuration" value="30"></div>
+        
+        <div>
+        <label for="restDuration">Rest Duration</label>
+        <input type="number" id="restDuration" value="30"></div>
+
+        <div>
+        <label for="totalSets">Sets</label>
+        <input type="number" id="totalSets" value="5"></div>
+        
+        <div><button onclick="startWorkout()"> Start Workout </button></div>
+        <div id = "exerciseDisplay">Exercise Will appear here.</div>
+        <div id = "exerciseImage"> Image for Exercise Here</div>
+        <div id = "timer">Timer here</div>
+        <div id = doneToday>Exercises you've done today</div>
+        <div id = score>Your score will display here</div>
+        <script src="script.js"></script>
+    </body>
+</html>

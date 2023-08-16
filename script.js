@@ -1,64 +1,101 @@
-const katas = [
-    {
-      name: "Sanchin  (三戦)", 
-      description: "A foundational kata in Uechi-Ryu. It focuses on breathing, posture, and concentration.",
-      video:"https://www.youtube.com/embed/B7YDkZrJ-V0" 
-    },
-    {
-        name: "Kanshiwa (感柔)", 
-        description: "This kata introduces several new techniques, including open-hand strikes and the toe kick.",
-        video: "https://www.youtube.com/embed/So-LhG9GvFY"
-    },
-    {
-        name: "Kanshu (感手)", 
-        description: "Known as a 'rotational' kata, Kanshu introduces new body dynamics to the practitioner.",
-        video: "https://www.youtube.com/embed/6covjfrlOrY"
-    },
-      {
-        name: "Seichin (制鎮)", 
-        description: "Seichin introduces one-handed techniques and the spearhand strike.",
-        video: "https://www.youtube.com/embed/kufil9L2L_k"
-      },
-      {
-        name: "Seisan (十三)", 
-        description: "A fundamental kata of Uechi-Ryu that has direct lineage to Chinese boxing.",
-        video: "https://www.youtube.com/embed/y5ut-dmu_cY"
-      },
-      {
-        name: "Seiryu (制竜)", 
-        description: "Seiryu incorporates techniques performed while moving on a single line.",
-        video: "https://www.youtube.com/embed/VOgOKN-zjXo"
-      },
-      {
-        name: "Kanchin  (観鎮)", 
-        description: "Kanchin is a distinctive kata in Uechi-Ryu, introducing advanced concepts and techniques. This kata includes challenging movements that require a good understanding of balance, power generation, and body mechanics. It encourages the practitioner to focus on circular movement and the effective use of open-hand techniques.",
-        video: "https://www.youtube.com/embed/3ro32DCpTv8"
-      },
-      {
-        name: "Sanseirui (三十六)", 
-        description: "One of the more complex katas, Sanseirui includes techniques for a variety of combat situations.",
-        video: "https://www.youtube.com/embed/lHAe3dNf-oQ"
-      },
-                
-  ];
-  
-  function generateKata() {
-    const randomIndex = Math.floor(Math.random() * katas.length);
-    const kata = katas[randomIndex];
-    document.getElementById('kata').textContent = kata.name;
-    document.getElementById('description').textContent = kata.description;
-    
-    const videoContainer = document.getElementById('video');
-    videoContainer.src = kata.video;
-    document.body.style.backgroundColor = getRandomGreyColor();
-  }
-  
-  function getRandomGreyColor() {
-    const range = [160, 199];  // White/grey-ish colors range
-    const randomValue = Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
-    return `rgb(${randomValue}, ${randomValue}, ${randomValue})`;
-  }
-  
+let exercisesDone = []
+let intensity = 0
+let weight = 1;
+let weightINcrement = 0.25
+score = 0
+
+const exercises = [
+    {"name": "Jumping Jacks", "level": 2},
+    {"name": "Push Ups", "level": 3},  
+    {"name":"Squats", "level": 4},
+    {"name":"Lunges", "level": 4},
+    {"name":"Plank", "level": 1},
+    {"name":"High Knees", "level": 1},
+    {"name":"Crunches", "level": 2},
+    {"name":"Burpees", "level": 3},
+    {"name":"Calf Raises", "level": 1}
+];
+
+let workoutTime = 30;  // in seconds
+let restTime = 10;     // in seconds
+let totalSets = 5;     // number of cycles
+
+let currentSet = 0;
+let isRest = false;
+
+function startWorkout() {
+    getUserInput()
+    currentSet = 0;
+    nextExercise();
+}
+
+function getUserInput() {
+    const workoutDurationInput = document.getElementById("workoutDuration");
+    const restDurationInput = document.getElementById("restDuration");
+    const totalSetsInput = document.getElementById("totalSets");
+
+    // Get values from input fields and convert them to integers
+    workoutTime = parseInt(workoutDurationInput.value, 10);
+    restTime = parseInt(restDurationInput.value, 10);
+    totalSets = parseInt(totalSetsInput.value, 10);
+}
 
 
-document.getElementById('generate-btn').addEventListener('click', generateKata);
+
+function nextExercise() {
+    if (currentSet < totalSets) {
+        if (!isRest) {
+            const randomIndex = Math.floor(Math.random() * exercises.length);
+            const chosenExercise = exercises[randomIndex];
+            document.getElementById("exerciseDisplay").textContent = chosenExercise.name;
+            exercisesDone.push(chosenExercise.name);
+            console.log(exercisesDone)
+            intensity += chosenExercise.level * weight
+            weight += weightINcrement
+            console.log(intensity)
+            startTimer(workoutTime, () => {
+                isRest = true;
+                nextExercise();
+                displayExercisesDone(); 
+            });
+
+        } else {
+            document.getElementById("exerciseDisplay").textContent = "REST";
+            startTimer(restTime, () => {
+                isRest = false;
+                currentSet++;
+                nextExercise();
+            });
+        } 
+    } else {
+        document.getElementById("exerciseDisplay").textContent = "Workout Complete!";
+        document.getElementById("timer").textContent = "";
+        score = intensity * totalSets + workoutTime 
+        console.log(score)
+        displayScore()
+    }
+}
+
+
+
+function startTimer(duration, callback) {
+    let timeLeft = duration;
+    document.getElementById("timer").textContent = timeLeft + "s";
+    const interval = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").textContent = timeLeft + "s";
+        if (timeLeft <= 0) {
+            clearInterval(interval);
+            callback();
+        }
+    }, 1000);
+}
+
+function displayExercisesDone() {
+    const displayE = document.getElementById("doneToday");
+    displayE.textContent = exercisesDone.join(", ")
+}
+
+function displayScore(){
+    document.getElementById("score").textContent = score;
+}
