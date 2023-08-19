@@ -77,3 +77,28 @@ button:focus {
     outline: none; /* Removes the default browser outline */
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.5); /* Adds a glow effect */
 }
+
+.imgR {
+    position: relative;
+    display: inline-block;
+}
+
+.imgR img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+.caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    text-align:center;
+}
+
+
+

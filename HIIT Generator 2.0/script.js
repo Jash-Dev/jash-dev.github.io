@@ -5,6 +5,7 @@ let weightIncrement = 0.25
 let score = 0
 let variation;
 let modifiers;
+let scoreResult; 
 
 const exercises = [
     {"name": "Jumping Jacks", "level": 2, "url": "jumpingjacks.gif"},
@@ -124,6 +125,7 @@ function nextExercise() {
         score = (intensity * modifier) * ((totalSets * workoutTime) / 60)
         console.log(score)
         displayScore()
+        scoreCalc()
         displayLevel()
     }
 }
@@ -152,18 +154,107 @@ function displayScore(){
     document.getElementById("score").textContent = score;
 }
 
+function scoreCalc(){
+    if (score < 25){
+        scoreResult = 1
+    } else if (score < 50){
+        scoreResult = 2
+    } else if (score < 75){
+        scoreResult = 3
+    } else if (score < 100){
+        scoreResult = 4
+    } else if (score < 125){
+        scoreResult = 5
+    }else if (score < 150){
+        scoreResult = 6
+    }else if (score < 175){
+        scoreResult = 7
+    }else if (score < 200){
+        scoreResult = 8
+    }else if (score < 225){
+        scoreResult = 9
+    }else if (score < 250){
+        scoreResult = 10 
+    }else if (score < 275){
+        scoreResult = 11
+    }else if (score < 300){
+        scoreResult = 12
+    }else if (score >= 300){
+        scoreResult = 13
+    }
+}
+
 function displayLevel(){
     const imageElement = document.getElementById("scoreImage")
+    const captionElement = document.getElementById("caption")
+switch (scoreResult){
+    case 1:
+       imageElement.src ="Yamcha.png" 
+       captionElement.textContent = "You might be able to take Yamcha, but that's nothing to be prouod of."
+       break;
 
-    if (score < 50){
-        imageElement.src = ""
-    } else if (score < 80) {
-        imageElement.src = ""
-    } else {
-        imageElement.src = ""
-    }
-    imageElement.load();
-    imageElement.play();
+    case 2:
+        imageElement.src ="Krillin.png"
+        captionElement.textContent = "You're almost as strong as Krillin, that's OK, I suppose."
+        break;
+    
+    case 3:
+        imageElement.src ="Radditz.png"
+        captionElement.textContent = "You can take the weakest Saiyan?  Alright..."
+        break;
+    
+    case 4:
+        imageElement.src ="Nappa.png"
+        captionElement.textContent = "You can defeat Nappa! interesting."
+        break;
+    
+    case 5:
+        imageElement.src ="Guldo.png"
+        captionElement.textContent = "You're almost as strong as the weakest member of the Ginyu force..."
+        break;
+    
+    case 6:
+        imageElement.src ="CaptainGinyu.png"
+        captionElement.textContent = "Hope he didn't steal your body when you kicked his ass."
+        break;
+    
+    case 7:
+        imageElement.src ="Frieza.png"
+        captionElement.textContent ="Now we're talking, don't bite his tail though."
+        break;
+    
+    case 8:
+        imageElement.src ="Androids.png"
+        captionElement.textContent = "Destroy Dr. Gero's work because science is always evil."
+        break;
+    
+    case 9:
+        imageElement.src ="Cell.png"
+        captionElement.textContent = "You can take Cell, you're pretty strong."
+        break;
+    
+    case 10:
+        imageElement.src ="MajinBuu.png"
+        captionElement.textContent = "Ancient horrors are no match for you!"
+        break;
+    
+    case 11:
+        imageElement.src ="GFrieza.png"
+        captionElement.textContent = "He's back for another whoopin'"
+        break;
+    
+    case 12:
+        imageElement.src ="Hit.png"
+        captionElement.textContent ="TIME to STOP screwing around!"
+        break;
+    
+    case 13:
+        imageElement.src ="Jiren.png"
+        captionElement.textContent = "You're not someone to mess with if you can take down Jiren!"
+        break;
+    
+
+}
 
 }
 
