@@ -10,10 +10,8 @@
     <body>
         <h1>HIIT</h1> 
             <h1>Workout Generator</h1>
-
-            <p>
-                Do you have what it takes?  YOu will be scored for completing workouts!
-            </p>
+            <p> Do you have what it takes?</p>
+            <p>You will be scored for completing exercises!</p>
        <div class="main-container">
         <div id = "exerciseImage"> </div>
         <div><label for="workoutDuration">Workout Duration (in seconds)</label>
@@ -27,14 +25,17 @@
         <label for="totalSets">Sets</label>
         <input type="number" id="totalSets" value="5"></div>
         
-        <div><button onclick="startWorkout()"> Start Workout </button></div>
+        <div><button id="startButton" onclick="startWorkout()"> Start Workout </button></div>
         
         <div id = "exerciseDisplay" class = "exerciseDisplay">
             _</div>
         
         <div id = 'timer' class = "timer">00</div>
+        <div><button id="pauseButton" onclick ="pause()">Pause</button>
+        
         <div id = doneToday>Get Started!</div>
         <div id = score>score</div>
+        <div></div>
         <div id = "resultImage" class =imgR>
             <img id = "scoreImage">
             <div id="caption" class = "caption"></div>

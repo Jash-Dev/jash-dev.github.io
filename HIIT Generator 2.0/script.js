@@ -6,6 +6,11 @@ let score = 0
 let variation;
 let modifiers;
 let scoreResult; 
+let workoutState = false;
+let interval;
+let timeLeft;
+let complete = false;
+let currentSide;
 
 const exercises = [
     {"name": "Jumping Jacks", "level": 2, "url": "jumpingjacks.gif"},
@@ -14,7 +19,10 @@ const exercises = [
             {"type":"Wide", "modifier": 0.25},
             {"type":"Close", "modifier": 0.5}, 
             {"type": "Clap", "modifier":0.75},
-            {"type": 'Normal', "modifier": 0}
+            {"type": 'Normal', "modifier": 0},
+            {"type": 'Hindu', "modifier": 0.8},
+            {"type": 'Spider Man', "modifier": 0.9}
+
         ]
     },  
 
@@ -22,11 +30,18 @@ const exercises = [
         [
             {"type": "Close", "modifier": 0.5},
             {"type": "Hindu", "modifier": 0.75}, 
-            {"type": 'Normal', "modifier": 0}
+            {"type": 'Normal', "modifier": 0},
         ]
     } ,
-    {"name":"Lunges", "level": 4, "url": "lunges.gif"},
-    {"name":"Plank", "level": 1, "url": "plank.gif"},
+    {"name":"Lunges", "level": 4, "url": "lunges.gif", "variations":[
+        {"type": 'Normal', "modifier": 0},
+        {"type": 'Side', "modifier": 0.25},
+        {"type": 'Hop', "modifier": 0.3}        
+    ]},
+
+    {"name":"Plank", "level": 1, "url": "plank.gif", "variations":[
+        {"type": 'Reach Under', "modifier": 0.33}
+    ]},
     {"name":"High Knees", "level": 1, "url": "highknees.gif"},
     
     {"name":"Crunches", "level": 2, "url": 'crunches.gif', "variations":
@@ -35,7 +50,9 @@ const exercises = [
             {"type": "reverse", "modifier": 0.5} , 
             {"type": "V-Up", "modifier": 0.75},
             {"type": 'Normal', "modifier": 0},
-            {"type": 'Leg-Raises', 'modifier': 0.9}
+            {"type": 'Leg-Raises', 'modifier': 0.9},
+            {"type": 'Sit-Up', "modifier": 0.125},
+            {"type": 'Runner', "modifier": 0.25}
         ]
     },
     
@@ -44,7 +61,14 @@ const exercises = [
 
     {"name":"Wall Sit", "level": 2, "url": "wallsit.gif"},
     {"name":"Tricep extension", "level": 1, "url": "triceps.gif"},
-    {"name":"Glute Bridge", "level": 1, "url": "glutebridge.gif"}
+    {"name":"Glute Bridge", "level": 1, "url": "glutebridge.gif"},
+    {"name":"Chair Dip", "level": 2.5, "url": "dip.gif", "variations":[
+        {"type": 'Floor', "modifier": 0.0625}
+    ]},
+    {"name":"Mountain Climbers", "level": 1.5, "url": "Mclimber.gif"},
+    {"name":"Bulgarian Squat (pause for other side)", "level": 2, "url": "Bulgaria.gif"}
+    
+    
 ];
 
 let workoutTime = 30;  // in seconds
@@ -56,8 +80,17 @@ let isRest = false;
 
 function startWorkout() {
     getUserInput()
+    document.getElementById("startButton").disabled = true;
     currentSet = 0;
     nextExercise();
+    if (complete === true){
+        getUserInput()
+        score = 0
+        currentSet = 0;
+        nextExercise();
+
+    }
+
 
 
 }
@@ -79,6 +112,7 @@ function nextExercise() {
 
     if (currentSet < totalSets) {
         if (!isRest) {
+            workoutState = true;
             const randomIndex = Math.floor(Math.random() * exercises.length);
             const chosenExercise = exercises[randomIndex];
             variation = intensifier(chosenExercise);
@@ -88,9 +122,11 @@ function nextExercise() {
             if (variation){
                 console.log("Variation")
                 document.getElementById("exerciseDisplay").textContent = `${chosenExercise.name} - ${variation.type}`;
+                speak(`${chosenExercise.name} - ${variation.type}`)
+                
             } else {
                 document.getElementById("exerciseDisplay").textContent = chosenExercise.name;
-
+                speak(chosenExercise.name)
             }
             console.log("variation selected: ", variation)
            
@@ -113,6 +149,7 @@ function nextExercise() {
 
         } else {
             document.getElementById("exerciseDisplay").textContent = "REST";
+            speak("REST")
             startTimer(restTime, () => {
                 isRest = false;
                 currentSet++;
@@ -122,22 +159,32 @@ function nextExercise() {
     } else {
         document.getElementById("exerciseDisplay").textContent = "Workout Complete!";
         document.getElementById("timer").textContent = "";
+        document.getElementById("startButton").disabled = false;
         score = (intensity * modifier) * ((totalSets * workoutTime) / 60)
         console.log(score)
         displayScore()
         scoreCalc()
         displayLevel()
+        complete = true;
     }
 }
 
 
-
 function startTimer(duration, callback) {
-    let timeLeft = duration;
-    document.getElementById("timer").textContent = timeLeft + "s";
-    const interval = setInterval(() => {
+     timeLeft = duration;
+     let minutes = Math.floor(timeLeft/60);
+     let seconds = timeLeft % 60;
+     let formattedSeconds = seconds < 10 ? "0" + seconds : seconds;
+
+     
+    document.getElementById("timer").textContent = (`${minutes} : ${formattedSeconds}`);
+     interval = setInterval(() => {
         timeLeft--;
-        document.getElementById("timer").textContent = timeLeft + "s";
+        minutes = Math.floor(timeLeft/60);
+        seconds = timeLeft % 60;
+        formattedSeconds = seconds < 10 ? "0" + seconds : seconds;
+        document.getElementById("timer").textContent = (`${minutes} : ${formattedSeconds}`);
+        
         if (timeLeft <= 0) {
             clearInterval(interval);
             callback();
@@ -190,7 +237,7 @@ function displayLevel(){
 switch (scoreResult){
     case 1:
        imageElement.src ="Yamcha.png" 
-       captionElement.textContent = "You might be able to take Yamcha, but that's nothing to be prouod of."
+       captionElement.textContent = "You might be able to take Yamcha, but that's nothing to be proud of."
        break;
 
     case 2:
@@ -219,7 +266,7 @@ switch (scoreResult){
         break;
     
     case 7:
-        imageElement.src ="Frieza.png"
+        imageElement.src ="Freiza.png"
         captionElement.textContent ="Now we're talking, don't bite his tail though."
         break;
     
@@ -264,4 +311,46 @@ function intensifier(exercise){
         return exercise.variations[randomIndex];
     }
     return null;
+}
+function resumeTimer(){
+    interval = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").textContent = timeLeft + "s";
+        if (timeLeft <= 0) {
+            clearInterval(interval);
+            nextExercise();
+        }
+    }, 1000);
+}
+
+
+
+function pause(){
+    if (workoutState === false){
+        resumeTimer()
+        
+       document.getElementById("pauseButton").textContent = "Pause";
+        workoutState = true;
+        
+    }else {
+       clearInterval(interval)
+       document.getElementById("pauseButton").textContent = "Resume";
+       workoutState = false; 
+
+       
+    }
+
+}
+
+function speak(text){
+    if ('speechSynthesis' in window) {
+        console.log("Speaking:", text)
+        let utterance = new SpeechSynthesisUtterance(text);
+        utterance.volume = 1;
+        utterance.rate = 1;
+        utterance.pitch = 1;
+
+        window.speechSynthesis.speak(utterance);
+
+    }
 }
