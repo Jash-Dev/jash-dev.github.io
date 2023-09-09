@@ -11,6 +11,7 @@ let interval;
 let timeLeft;
 let complete = false;
 let currentSide;
+let bilateral;
 
 const exercises = [
     {"name": "Jumping Jacks", "level": 2, "url": "jumpingjacks.gif"},
@@ -37,7 +38,7 @@ const exercises = [
         {"type": 'Normal', "modifier": 0},
         {"type": 'Side', "modifier": 0.25},
         {"type": 'Hop', "modifier": 0.3}        
-    ]},
+    ], "bilateral": true},
 
     {"name":"Plank", "level": 1, "url": "plank.gif", "variations":[
         {"type": 'Reach Under', "modifier": 0.33}
@@ -66,7 +67,7 @@ const exercises = [
         {"type": 'Floor', "modifier": 0.0625}
     ]},
     {"name":"Mountain Climbers", "level": 1.5, "url": "Mclimber.gif"},
-    {"name":"Bulgarian Squat (pause for other side)", "level": 2, "url": "Bulgaria.gif"}
+    {"name":"Bulgarian Squat", "level": 2, "url": "Bulgaria.gif", "bilateral": true}
     
     
 ];
@@ -117,8 +118,20 @@ function nextExercise() {
             const chosenExercise = exercises[randomIndex];
             variation = intensifier(chosenExercise);
             modifier = variation ? variation.modifier  : 1
+            let exerciseSides = ["LEFT", "RIGHT"]; //two sides for bilateral exercises
+            let currentSideVar = 0; //Variable to keep track of current side.
 
             
+            if (bilateral){
+                console.log("bilateral")
+                if(variation) {
+                document.getElementById("exerciseDisplay").textContent = `${chosenExercise.name} - ${variation.type} - ${side} `
+                speak(`${chosenExercise.name} - ${variation.type} - ${exerciseSides[currentSideVar]}`)}
+                else {
+                    document.getElementById("exerciseDisplay").textContent = `${chosenExercise.name} - ${side}`
+                    speak(`${chosenExercise.name} - ${exerciseSides[currentSideVar]}`)
+                }
+            }
             if (variation){
                 console.log("Variation")
                 document.getElementById("exerciseDisplay").textContent = `${chosenExercise.name} - ${variation.type}`;
@@ -141,11 +154,27 @@ function nextExercise() {
             intensity += chosenExercise.level * weight
             weight += weightIncrement
             console.log(intensity)
+            
+            
+            if(chosenExercise.bilateral){
+                startTimer(workoutTime, () =>{
+                    isRest = true;
+
+                    document.getElementById("exerciseDisplay").textContent = chosenExercise.name
+                    speak(`${chosenExercise.name} - ${exerciseSides[currentSideVar]}`)
+                    currentSideVar = (currentSideVar + 1) % exerciseSides.Length
+                    
+                    if (currentSideVar === 0){
+                        nextExercise();
+                    }
+                })
+            } else {
             startTimer(workoutTime, () => {
                 isRest = true;
+                
                 nextExercise();
                 displayExercisesDone(); 
-            });
+            })};
 
         } else {
             document.getElementById("exerciseDisplay").textContent = "REST";
