@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    #container {
+      display: flex;
+      justify-content: space-between;
+      height: 100vh;
+      align-items: center;
+    }
+    #yes-button, #no-button {
+      width: 50%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    #yes-button {
+      background-color: green;
+    }
+    #no-button {
+      background-color: red;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="yes-button" onclick="speakMessage('Yes')">Yes</div>
+    <div id="no-button" onclick="speakMessage('No')">No</div>
+  </div>
+
+  <script>
+    function speakMessage(message) {
+      if ('speechSynthesis' in window) {
+        var synthesis = window.speechSynthesis;
+        var utterance = new SpeechSynthesisUtterance(message);
+        synthesis.speak(utterance);
+      } else {
+        alert('Text-to-speech is not supported in your browser.');
+      }
+    }
+  </script>
+</body>
+</html>
