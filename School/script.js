@@ -1,20 +1,34 @@
-function speak() {
-    var text = document.getElementById('text-to-speak').value;
+window.addEventListener('load', function() {
+    // Preload speech synthesis voices
+    window.speechSynthesis.onvoiceschanged = function() {
+        var voices = window.speechSynthesis.getVoices();
+        // You can log voices or set a preferred voice here
+    };
+    window.speechSynthesis.getVoices(); // Trigger voice loading
+
+    // Other preloading tasks (e.g., images, custom scripts) can go here
+});
+
+document.getElementById('text-to-speak').addEventListener('keypress', function(event) {
+    if (event.keyCode === 13) { // 13 is the keycode for the Enter key
+        event.preventDefault(); // Prevent the default action to avoid form submission
+        speakText(document.getElementById('text-to-speak').value);
+    }
+});
+
+function speakText(text) {
     var utterance = new SpeechSynthesisUtterance(text);
     speechSynthesis.speak(utterance);
 }
+
 function help() {
-    var text = "I need help"
-    var utterance = new SpeechSynthesisUtterance(text);
-    speechSynthesis.speak(utterance);
+    speakText("I need help");
 }
+
 function Nbreak() {
-    var text = "I need a break"
-    var utterance = new SpeechSynthesisUtterance(text);
-    speechSynthesis.speak(utterance);
+    speakText("I need a break");
 }
+
 function bathroom() {
-    var text = "I need to use the bathroom"
-    var utterance = new SpeechSynthesisUtterance(text);
-    speechSynthesis.speak(utterance);
+    speakText("I need to use the bathroom");
 }
