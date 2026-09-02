@@ -1,0 +1,36 @@
+first day, 2026-08-03
+last day,  2027-05-27
+
+no school, 2026-08-21, Statehood Day
+no school, 2026-09-07, Labor Day
+no school, 2026-10-05 to 2026-10-09, Fall Break
+no school, 2026-11-03, Election Day
+no school, 2026-11-11, Veterans Day
+no school, 2026-11-26, Thanksgiving
+no school, 2026-11-27, School Holiday
+no school, 2026-12-21 to 2027-01-01, Winter Break
+no school, 2027-01-04, Teacher Work Day
+no school, 2027-01-18, Martin Luther King Jr. Day
+no school, 2027-02-15, Presidents Day
+no school, 2027-03-15 to 2027-03-19, Spring Break
+no school, 2027-03-26, Good Friday
+no school, 2027-03-29, Prince Kuhio Day
+no school, 2027-05-31, Memorial Day
+
+# HIDOE sets one Institute Day during February 8-12 with no students, and the
+# date is chosen per island. Add yours here once your school announces it:
+# no school, 2027-02-10, Institute Day
+
+# Your own campus days go here too:
+# no school, 2026-10-16, Teacher Work Day
+# no school, 2027-04-02, Parent Conferences
+
+# ---------------------------------------------------------------------------
+# BLOCK ROTATION
+# Delete the # marks below and change the labels to match your school.
+# ---------------------------------------------------------------------------
+# cycle, A, B
+# cycle start, 2026-08-03
+#
+# When a fire drill or a snow-in-Hawaii miracle knocks the cycle off, pin it:
+# day, 2026-09-14, A

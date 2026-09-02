@@ -1,0 +1,31 @@
+start,  end,    name,         picture, note,                          days,  block
+8:00,   8:20,   Arrival,      🎒,      Bags away say hello,
+8:20,   9:00,   Meeting,      👋,      Calendar and weather,
+9:00,   9:30,   Reading,      📖,      ,
+9:30,   9:45,   Break,        🧩,      Sensory area,
+9:45,   10:45,  Math,         🔢,      ,
+10:45,  11:05,  Snack,        🍎,      Snack and bathroom,
+11:05,  11:40,  Writing,      ✏️,      ,
+11:40,  12:15,  Lunch,        🍽️,      ,
+12:15,  12:45,  Recess,       ⚽,      Outside,
+12:45,  1:30,   Life skills,  🧺,      "Cooking, laundry, hygiene",
+1:30,   1:45,   Break,        🧩,      Sensory area,
+1:45,   2:25,   Work skills,  🧰,      Job tasks,
+2:25,   2:50,   Pack up,      👋,      Bags jobs goodbye,
+
+# ---------------------------------------------------------------------------
+# Days that are different from the rest of the week go in the same list, with
+# the days named in the last column. Delete the # to switch these on, and
+# remove or shorten whatever they overlap.
+#
+# 1:45,  2:25,   Music,        🎵,      With Ms. Lee,                  Tu
+# 1:45,  2:25,   P.E.,         ⚽,      Gym,                           Th
+# 9:00,  9:30,   Speech,       💬,      Small group,                   M, W, F
+#
+# And if your school runs a block rotation, the day the period lands on goes
+# in the last column. These two rows put a different period first depending
+# on whether it is an A day or a B day:
+#
+# 8:20,  9:50,   Period 1,     📘,      ,                              ,      A
+# 8:20,  9:50,   Period 3,     📗,      ,                              ,      B
+# ---------------------------------------------------------------------------

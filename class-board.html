@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1D2E3D;
+    --panel:#FAF8F4;
+    --panel-2:#EDE8DF;
+    --ink:#17222D;
+    --muted:#6B7A88;
+    --line:#DAD3C7;
+    --teal:#2E8B80;
+    --teal-soft:#D8EDE9;
+    --amber:#DDA02B;
+    --amber-soft:#FBEBCB;
+    --coral:#D3654A;
+    --coral-soft:#F8DED6;
+    --r:1rem;
+  }
+
+  html{ font-size:clamp(13px, 0.6vw + 1.0vh, 26px); }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+
+  body{
+    font-family:'Nunito','Trebuchet MS','Segoe UI',sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    overflow:hidden;              /* never scrolls */
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .board{
+    height:100dvh;
+    display:grid;
+    grid-template-rows:auto minmax(0,1fr) auto;
+    gap:.7rem;
+    padding:2.5vh 2.2vw;          /* keeps clear of TV overscan */
+  }
+
+  /* ================= top bar ================= */
+  .topbar{
+    display:grid;
+    grid-template-columns:minmax(0,auto) minmax(0,1fr) minmax(0,auto);
+    align-items:center;
+    gap:1rem;
+    background:var(--panel);
+    border-radius:var(--r);
+    padding:.6rem 1.3rem;
+  }
+  .date-block{display:flex;align-items:baseline;gap:.7rem;min-width:0;overflow:hidden}
+  .lead{font-size:1.05rem;font-weight:700;color:var(--muted);white-space:nowrap}
+  .weekday{
+    font-family:'Fredoka',sans-serif;font-weight:600;
+    font-size:3.1rem;line-height:1;color:var(--ink);white-space:nowrap;
+  }
+  .datenum{font-size:1.5rem;font-weight:700;color:var(--muted);white-space:nowrap;
+    min-width:0;overflow:hidden;text-overflow:ellipsis}
+
+  .chiprow{
+    justify-self:stretch;display:flex;align-items:center;justify-content:center;
+    flex-wrap:wrap;gap:.4rem .5rem;min-width:0;
+  }
+  .daytype{
+    display:none;font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.15rem;
+    background:#E2E9ED;color:#3B4B58;padding:.18em .7em;border-radius:.45rem;white-space:nowrap;
+  }
+  .daytype.on{display:inline-block}
+  .lunchchip{
+    display:none;align-items:center;gap:.45rem;flex:0 1 auto;
+    background:#EDF0F2;color:#3B4B58;font-weight:700;font-size:1.05rem;
+    padding:.3em .9em;border-radius:.7rem;
+    min-width:0;max-width:34ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .lunchchip span:last-child{overflow:hidden;text-overflow:ellipsis}
+  .lunchchip.on{display:flex}
+  .rightzone{display:flex;flex-direction:column;align-items:flex-end;gap:.05rem;min-width:0;overflow:hidden}
+  .helper{
+    font-size:.95rem;font-weight:700;color:var(--muted);white-space:nowrap;
+    display:none;align-items:baseline;gap:.4em;
+  }
+  .helper.on{display:flex}
+  .helper b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.3rem;color:var(--ink)}
+
+  .special{
+    display:none;
+    align-items:center;
+    gap:.5rem;
+    background:var(--chip,#E5E9EC);
+    color:var(--chipink,#17222D);
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:1.15rem;
+    padding:.3em 1em;
+    border-radius:.7rem;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    flex:0 1 auto;min-width:0;
+  }
+  .special.on{display:flex}
+  .special span:last-child{overflow:hidden;text-overflow:ellipsis}
+
+  .clock{
+    font-family:'Fredoka',sans-serif;font-weight:500;
+    font-size:2.05rem;line-height:1;color:var(--muted);white-space:nowrap;
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* ================= middle ================= */
+  .middle{
+    display:grid;
+    grid-template-columns:1.08fr 1fr;
+    gap:.7rem;
+    min-height:0;
+  }
+
+  /* ---- first / then ---- */
+  .firstthen{display:grid;grid-template-rows:1.42fr 1fr;gap:.7rem;min-height:0}
+  .firstthen.solo{grid-template-rows:1fr}
+  .firstthen.solo .ft-then{display:none}
+
+  .ft{
+    background:var(--panel);
+    border-radius:var(--r);
+    padding:.7rem 1.2rem .9rem;
+    display:grid;
+    grid-template-rows:auto minmax(0,1fr) auto;
+    min-height:0;
+    overflow:hidden;
+  }
+  .ft-label{
+    font-family:'Fredoka',sans-serif;font-weight:600;
+    font-size:1.35rem;color:var(--muted);line-height:1.1;
+  }
+  .ft-body{
+    display:flex;align-items:center;gap:1.1rem;min-height:0;
+  }
+  .ft-icon{
+    font-size:4.6rem;line-height:1;flex:0 0 auto;
+    width:1.35em;height:1.35em;border-radius:1rem;
+    background:var(--panel-2);
+    display:grid;place-items:center;
+  }
+  .ft-icon img{width:78%;height:78%;object-fit:contain}
+  .ft-text{min-width:0}
+  .ft-name{
+    display:block;
+    font-family:'Fredoka',sans-serif;font-weight:600;
+    font-size:4.2rem;line-height:1.02;color:var(--ink);
+    overflow-wrap:break-word;
+  }
+  .ft-detail{display:block;font-size:1.25rem;font-weight:600;color:var(--muted);margin-top:.2em}
+
+  .ft-now .ft-icon{font-size:5.8rem}
+  .ft-then .ft-icon{font-size:4rem}
+  .ft-then .ft-name{font-size:2.9rem}
+  .ft-then .ft-detail{font-size:1.1rem}
+
+  /* timer */
+  .timer{margin-top:.5rem}
+  .track{
+    height:1.1rem;border-radius:999px;background:var(--panel-2);overflow:hidden;
+  }
+  .track i{
+    display:block;height:100%;width:0%;border-radius:999px;
+    background:var(--teal);
+    transition:width 1s linear, background-color .4s ease;
+  }
+  .left{
+    margin-top:.3rem;font-size:1.3rem;font-weight:800;color:var(--muted);
+    font-variant-numeric:tabular-nums;
+  }
+  .timer.hide{visibility:hidden}
+
+  .ft-now.p2{background:var(--amber-soft)}
+  .ft-now.p2 .track i{background:var(--amber)}
+  .ft-now.p2 .left{color:#8A6210}
+  .ft-now.p1{background:var(--amber-soft)}
+  .ft-now.p1 .track i{background:var(--amber)}
+  .ft-now.p1 .left{color:#8A6210}
+  .ft-now.p30{background:var(--coral-soft)}
+  .ft-now.p30 .track i{background:var(--coral)}
+  .ft-now.p30 .left{color:#8E3421}
+
+  /* ---- right panel: weather + word ---- */
+  .side{
+    background:var(--panel);border-radius:var(--r);
+    padding:.7rem .9rem .9rem;
+    display:flex;flex-direction:column;gap:.6rem;min-height:0;
+  }
+  .panel-head{display:flex;align-items:center;justify-content:space-between;gap:.7rem;flex:0 0 auto}
+  .headtools{display:flex;align-items:center;gap:.4rem}
+  .tabs{display:flex;gap:.35rem}
+  .tab{
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.45rem;
+    background:transparent;border:none;cursor:pointer;color:var(--muted);
+    padding:.15em .75em;border-radius:.6rem;
+  }
+  .tab.on{background:var(--teal-soft);color:#1D6259}
+  .tab:focus-visible{outline:.16rem solid var(--teal);outline-offset:.1rem}
+
+  .view{display:flex;flex-direction:column;gap:.6rem;flex:1 1 auto;min-height:0}
+  .view[hidden]{display:none}
+
+  /* word of the day */
+  .wordcard{
+    flex:1 1 auto;min-height:0;border-radius:.7rem;background:var(--panel-2);
+    display:flex;align-items:center;justify-content:center;gap:1.1rem;
+    padding:.6rem 1rem;cursor:pointer;text-align:left;
+  }
+  .wordcard:active{background:#E5DFD4}
+  .w-icon{font-size:4.6rem;line-height:1}
+  .w-icon img{width:1.2em;height:1.2em;object-fit:contain}
+  .w-word{
+    display:block;font-family:'Fredoka',sans-serif;font-weight:600;
+    font-size:3.4rem;line-height:1.02;color:var(--ink);
+  }
+  .w-sent{display:block;font-size:1.3rem;font-weight:700;color:var(--muted);margin-top:.15em}
+  .w-prompt{
+    margin:0;text-align:center;font-family:'Fredoka',sans-serif;font-weight:600;
+    font-size:1.35rem;color:var(--muted);flex:0 0 auto;
+  }
+  .w-prompt.good{color:#1D6259}
+
+  .bank{
+    display:grid;grid-template-columns:repeat(var(--cols,3),1fr);
+    gap:.45rem;flex:0 0 auto;
+  }
+  .bword{
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.15rem;color:var(--ink);
+    background:#EDEFF1;border:none;border-radius:.7rem;cursor:pointer;
+    padding:.5rem .2rem .45rem;min-height:4.4rem;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.1rem;
+    box-shadow:0 .2rem 0 #CBD2D8;
+    transition:transform .09s ease, box-shadow .09s ease, background-color .2s ease;
+  }
+  .bword .b-pic{font-size:2.1rem;line-height:1.1}
+  .bword .b-pic img{width:2.1rem;height:2.1rem;object-fit:contain}
+  .bword:active{transform:translateY(.16rem);box-shadow:0 .04rem 0 #CBD2D8}
+  .bword:focus-visible{outline:.18rem solid var(--teal);outline-offset:.12rem}
+  .bword.right{background:var(--teal-soft);box-shadow:0 .2rem 0 var(--teal)}
+  .bword.miss{background:#E3E6E8;opacity:.5}
+  .bword.hint{box-shadow:0 0 0 .18rem var(--teal), 0 .2rem 0 #CBD2D8}
+  .sound{
+    font-family:inherit;font-size:.9rem;font-weight:700;color:var(--muted);
+    background:var(--panel-2);border:none;border-radius:999px;
+    padding:.4em .95em;cursor:pointer;display:inline-flex;align-items:center;gap:.4em;
+  }
+  .sound svg{width:1.1em;height:1.1em;fill:currentColor}
+
+  .sky{position:relative;flex:1 1 auto;min-height:0;border-radius:.7rem;overflow:hidden;background:#8FC9EA}
+  .sky canvas{display:block;width:100%;height:100%}
+  .caption{
+    position:absolute;left:0;right:0;bottom:0;margin:0;padding:1.2rem .6rem .45rem;
+    text-align:center;font-family:'Fredoka',sans-serif;font-size:1.6rem;font-weight:600;color:#fff;
+    text-shadow:0 2px 10px rgba(0,0,0,.55);
+    background:linear-gradient(to top,rgba(18,30,42,.5),transparent);
+    pointer-events:none;
+  }
+
+  .chips{display:grid;grid-template-columns:repeat(6,1fr);gap:.45rem;flex:0 0 auto}
+  .chip .b-pic{font-size:2.1rem}
+  .chip{
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:1rem;color:#2A2113;
+    background:var(--tint);border:none;border-radius:.7rem;
+    padding:.5rem .2rem .4rem;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15rem;
+    box-shadow:0 .2rem 0 var(--shade);
+    transition:transform .09s ease, box-shadow .09s ease;
+  }
+  .chip svg{width:2.3rem;height:2.3rem}
+  .chip:active,.chip.press{transform:translateY(.16rem);box-shadow:0 .04rem 0 var(--shade)}
+  .chip[aria-pressed="true"]{outline:.18rem solid var(--ink);outline-offset:.12rem}
+  .chip:focus-visible{outline:.18rem solid var(--teal);outline-offset:.12rem}
+  .chip-sunny {--tint:#FFD870;--shade:#DFAF2E}
+  .chip-cloudy{--tint:#DCE4EB;--shade:#B3C0CC}
+  .chip-rainy {--tint:#AEDAEF;--shade:#7EB6D5}
+  .chip-windy {--tint:#C2E7D6;--shade:#8FC7AE}
+  .chip-snowy {--tint:#E8EFF6;--shade:#BECCDA}
+  .chip-stormy{--tint:#CAC1E3;--shade:#A093C5}
+
+  /* ================= day strip ================= */
+  .strip.empty{display:none}
+  .strip{
+    background:var(--panel);border-radius:var(--r);
+    padding:.55rem .6rem;
+    display:grid;
+    grid-auto-flow:column;
+    grid-auto-columns:minmax(0,1fr);
+    gap:.35rem;
+  }
+  .slot{
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:.1rem;
+    padding:.4rem .15rem .35rem;border-radius:.6rem;text-align:center;min-width:0;
+    position:relative;
+  }
+  .slot .s-time{font-size:.78rem;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+  .slot .s-icon{font-size:1.9rem;line-height:1.15;position:relative}
+  .slot .s-icon img{width:1.9rem;height:1.9rem;object-fit:contain}
+  .slot .s-name{
+    font-family:'Fredoka',sans-serif;font-weight:500;font-size:.92rem;line-height:1.1;
+    color:var(--ink);overflow-wrap:break-word;hyphens:auto;
+  }
+  .slot.done .s-time,.slot.done .s-icon,.slot.done .s-name{opacity:.3}
+  .slot.done::after{
+    content:"\2713";position:absolute;top:1.55rem;left:50%;margin-left:.5rem;
+    font-family:'Nunito',sans-serif;font-size:1.35rem;font-weight:800;color:var(--teal);
+    text-shadow:0 0 .2rem #FAF8F4, 0 0 .2rem #FAF8F4, 0 0 .2rem #FAF8F4;
+  }
+  .slot.now{background:var(--teal-soft);box-shadow:inset 0 0 0 .16rem var(--teal)}
+  .slot.now .s-time{color:#1D6259}
+  .slot.next{background:var(--panel-2)}
+
+  /* ================= chrome ================= */
+  .status{
+    position:fixed;left:.6rem;bottom:.35rem;z-index:9;
+    font-size:.62rem;font-weight:700;color:rgba(255,255,255,.55);
+    opacity:.28;transition:opacity .15s ease;pointer-events:none;
+    max-width:60vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  body:hover .status{opacity:.75}
+  .status.warn{color:#F0C46A;opacity:1}
+
+  .fs{
+    position:fixed;top:.4rem;right:.5rem;z-index:9;
+    background:transparent;color:rgba(255,255,255,.5);
+    border:none;border-radius:.4rem;cursor:pointer;padding:.3rem;line-height:0;
+    opacity:.25;transition:opacity .15s ease;
+  }
+  .fs:hover,.fs:focus-visible{opacity:1}
+  .fs svg{width:1.1rem;height:1.1rem;fill:currentColor}
+
+  /* ================= small screens: allow scroll ================= */
+  @media (max-width:900px), (orientation:portrait){
+    body{overflow:auto}
+    .board{height:auto;min-height:100dvh;padding:2.5vh 4vw}
+    .middle{grid-template-columns:1fr}
+    .topbar{grid-template-columns:1fr;text-align:center;gap:.3rem}
+    .date-block{justify-content:center;flex-wrap:wrap}
+    .special{justify-self:center}
+    .clock{display:none}
+    .rightzone{align-items:center}
+    .chiprow{flex-wrap:wrap;justify-content:center}
+    .sky{aspect-ratio:16/9;flex:0 0 auto}
+    .strip{grid-auto-flow:row;grid-template-columns:repeat(4,1fr);grid-auto-columns:auto}
+  }
+
+  @media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+
+<button class="fs" id="fsBtn" title="Full screen" aria-label="Full screen">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5v2H6v3H4zm11-5h5v5h-2V6h-3V4zM4 15h2v3h3v2H4v-5zm14 0h2v5h-5v-2h3v-3z"/></svg>
+</button>
+
+<div class="status" id="status"></div>
+
+<div class="board">
+
+  <header class="topbar">
+    <div class="date-block">
+      <span class="lead">Today is</span>
+      <span class="weekday" id="weekday">—</span>
+      <span class="datenum" id="datenum">—</span>
+      <span class="daytype" id="daytype"></span>
+    </div>
+    <div class="chiprow">
+      <div class="special" id="special"></div>
+      <div class="lunchchip" id="lunchChip"></div>
+    </div>
+    <div class="rightzone">
+      <div class="helper" id="helper"></div>
+      <div class="clock" id="clock">—</div>
+    </div>
+  </header>
+
+  <main class="middle">
+
+    <section class="firstthen">
+      <div class="ft ft-now" id="nowCard">
+        <span class="ft-label" id="nowLabel">First</span>
+        <div class="ft-body">
+          <span class="ft-icon" id="nowIcon" aria-hidden="true"></span>
+          <span class="ft-text">
+            <span class="ft-name" id="nowName">—</span>
+            <span class="ft-detail" id="nowDetail"></span>
+          </span>
+        </div>
+        <div class="timer hide" id="timer">
+          <div class="track"><i id="bar"></i></div>
+          <div class="left" id="left" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <div class="ft ft-then" id="thenCard">
+        <span class="ft-label">Then</span>
+        <div class="ft-body">
+          <span class="ft-icon" id="thenIcon" aria-hidden="true"></span>
+          <span class="ft-text">
+            <span class="ft-name" id="thenName">—</span>
+            <span class="ft-detail" id="thenDetail"></span>
+          </span>
+        </div>
+        <span></span>
+      </div>
+    </section>
+
+    <section class="panel side">
+      <div class="panel-head">
+        <div class="tabs" role="tablist">
+          <button class="tab on" id="tabWeather" role="tab" aria-selected="true">Weather</button>
+          <button class="tab" id="tabWord" role="tab" aria-selected="false">Word</button>
+        </div>
+        <div class="headtools">
+          <button class="sound" id="newWordBtn" hidden>New word</button>
+          <button class="sound" id="soundBtn" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true" id="soundIcon"></svg>
+            <span id="soundLabel">Sound on</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="view" id="viewWeather">
+        <div class="sky">
+          <canvas id="sky"></canvas>
+          <p class="caption" id="caption" aria-live="polite">Pick the weather</p>
+        </div>
+        <div class="chips" id="chips"></div>
+      </div>
+
+      <div class="view" id="viewWord" hidden>
+        <div class="wordcard" id="wordCard">
+          <span class="w-icon" id="wIcon" aria-hidden="true"></span>
+          <span class="w-text">
+            <span class="w-word" id="wWord">—</span>
+            <span class="w-sent" id="wSent"></span>
+          </span>
+        </div>
+        <p class="w-prompt" id="wPrompt" aria-live="polite">Find the word</p>
+        <div class="bank" id="bank"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="strip" id="strip"></footer>
+</div>
+
+<!-- The schedule lives in schedule.js, next to this file. If it is missing,
+     the built-in copy inside this page is used instead. -->
+<script src="schedule.js"></script>
+<script src="calendar.js"></script>
+<script src="lunch.js"></script>
+<script src="words.js"></script>
+
+<script>
+/* ============================================================================
+   1. THE DAY
+   [start, end, name, detail, icon]      13.5 means 1:30 pm
+   Keep names to one or two words — this class reads at a K–1 level.
+   For "icon" you can use an emoji, or "img:pictures/math.png" to swap in the
+   same symbols used on the AAC boards and picture schedules.
+   ============================================================================ */
+/* Where the schedule comes from, in priority order:
+     1. a published Google Sheet, if you paste its CSV link into SCHEDULE_URL below
+     2. schedule.csv, if this page is served from a web server
+     3. schedule.js sitting next to this file — works even when you just
+        double-click this page, so this is the usual one to edit
+     4. the built-in copy below, if none of the above are found
+   The small label in the bottom-left corner always says which one is live. */
+
+const SCHEDULE_URL = "";      // optional: a published Google Sheet CSV link
+const CALENDAR_URL = "";      // optional: same, for the school year calendar
+const LUNCH_URL    = "";      // optional: same, for the lunch menu
+const WORDS_URL    = "";      // optional: same, for the word list
+
+let SCHEDULE = [];            // today's activities — filled in by the loader
+let RAW_ROWS = [];
+
+const BUILT_IN = `
+start,  end,    name,         icon, detail,                        days
+8:00,   8:20,   Arrival,      \u{1F392},   Bags away say hello,
+8:20,   9:00,   Meeting,      \u{1F44B},   Calendar and weather,
+9:00,   9:30,   Reading,      \u{1F4D6},   ,
+9:30,   9:45,   Break,        \u{1F9E9},   Sensory area,
+9:45,   10:45,  Math,         \u{1F522},   ,
+10:45,  11:05,  Snack,        \u{1F34E},   Snack and bathroom,
+11:05,  11:40,  Writing,      \u{270F}\u{FE0F},   ,
+11:40,  12:15,  Lunch,        \u{1F37D}\u{FE0F},   ,
+12:15,  12:45,  Recess,       \u{26BD},   Outside,
+12:45,  1:30,   Life skills,  \u{1F9FA},   "Cooking, laundry, hygiene",
+1:30,   1:45,   Break,        \u{1F9E9},   Sensory area,
+1:45,   2:25,   Work skills,  \u{1F9F0},   Job tasks,
+2:25,   2:50,   Pack up,      \u{1F44B},   Bags jobs goodbye,
+`;
+
+/* How many seconds before the end of an activity to give a warning.
+   These come straight off the time-priming accommodation. */
+const PRIME = [120, 60, 30];
+
+/* Say "First / Then" or "Now / Next" — match whatever the students are taught. */
+const LABEL_NOW  = "First";
+const LABEL_NEXT = "Then";
+
+/* ============================================================================
+   2. CALENDAR
+   Each entry works out its own date every year, so this never needs updating.
+     fixed(month, day)      nth(month, weekday, n)      lastOf(month, weekday)
+     dated("2027-02-11")    shift(rule, days)
+   Weekdays: 0 Sun, 1 Mon, 2 Tue, 3 Wed, 4 Thu, 5 Fri, 6 Sat
+   "days" is how early the countdown starts (default 14).
+   ============================================================================ */
+const CALENDAR = [
+  // ---- your own days: picture day, field trips, birthdays, breaks ----
+  // { when: dated("2026-09-15"), name:"Picture day", icon:"\u{1F4F8}", color:"#4E86A8" },
+
+  { when: fixed(1, 1),    name:"New Year's Day",   greeting:"Happy New Year",       icon:"\u{1F389}", color:"#7A6BA8" },
+  { when: nth(1, 1, 3),   name:"Martin Luther King Jr. Day",                        icon:"\u{1F54A}\u{FE0F}", color:"#4E86A8" },
+  { when: fixed(2, 14),   name:"Valentine's Day",  greeting:"Happy Valentine's Day",icon:"\u{1F49D}", color:"#C9557A" },
+  { when: nth(2, 1, 3),   name:"Presidents' Day",                                   icon:"\u{1F3DB}\u{FE0F}", color:"#4E7BA8" },
+  { when: fixed(3, 17),   name:"St. Patrick's Day",greeting:"Happy St. Patrick's Day", icon:"\u{1F340}", color:"#3D8F63" },
+  { when: fixed(3, 20),   name:"First day of spring",                               icon:"\u{1F337}", color:"#5FA544" },
+  { when: fixed(3, 26),   name:"Prince K\u016Bhi\u014D Day",                        icon:"\u{1F33A}", color:"#B85433" },
+  { when: shift(easterRule, -2), name:"Good Friday",                                icon:"\u{271D}\u{FE0F}", color:"#6F6394" },
+  { when: easterRule,     name:"Easter",           greeting:"Happy Easter",         icon:"\u{1F430}", color:"#B183C4" },
+  { when: fixed(4, 22),   name:"Earth Day",                                         icon:"\u{1F30D}", color:"#3D8F63" },
+  { when: fixed(5, 1),    name:"Lei Day",          greeting:"Happy Lei Day",        icon:"\u{1F33A}", color:"#C9557A" },
+  { when: nth(5, 0, 2),   name:"Mother's Day",     greeting:"Happy Mother's Day",   icon:"\u{1F49B}", color:"#C9557A" },
+  { when: lastOf(5, 1),   name:"Memorial Day",                                      icon:"\u{1F1FA}\u{1F1F8}", color:"#4E7BA8" },
+  { when: fixed(6, 11),   name:"King Kamehameha Day",                               icon:"\u{1F451}", color:"#B85433" },
+  { when: nth(6, 0, 3),   name:"Father's Day",     greeting:"Happy Father's Day",   icon:"\u{1F49A}", color:"#4E86A8" },
+  { when: fixed(6, 19),   name:"Juneteenth",                                        icon:"\u{1F386}", color:"#7A6BA8" },
+  { when: fixed(6, 21),   name:"First day of summer",                               icon:"\u{2600}\u{FE0F}", color:"#D89A22" },
+  { when: fixed(7, 4),    name:"Fourth of July",   greeting:"Happy Fourth of July", icon:"\u{1F386}", color:"#4E7BA8" },
+  { when: nth(8, 5, 3),   name:"Statehood Day",                                     icon:"\u{1F334}", color:"#2E8B72" },
+  { when: nth(9, 1, 1),   name:"Labor Day",                                         icon:"\u{1F6E0}\u{FE0F}", color:"#7E6E52" },
+  { when: fixed(9, 22),   name:"First day of fall",                                 icon:"\u{1F342}", color:"#C4762B" },
+  { when: fixed(10, 31),  name:"Halloween",        greeting:"Happy Halloween",      icon:"\u{1F383}", color:"#CE7422", days:21 },
+  { when: fixed(11, 11),  name:"Veterans Day",                                      icon:"\u{1F1FA}\u{1F1F8}", color:"#4E7BA8" },
+  { when: nth(11, 4, 4),  name:"Thanksgiving",     greeting:"Happy Thanksgiving",   icon:"\u{1F983}", color:"#B85433", days:21 },
+  { when: fixed(12, 21),  name:"First day of winter",                               icon:"\u{2744}\u{FE0F}", color:"#4E86A8" },
+  { when: fixed(12, 24),  name:"Christmas Eve",                                     icon:"\u{1F384}", color:"#3D8F63" },
+  { when: fixed(12, 25),  name:"Christmas",        greeting:"Merry Christmas",      icon:"\u{1F384}", color:"#B33A32", days:30 },
+  { when: fixed(12, 31),  name:"New Year's Eve",                                    icon:"\u{1F387}", color:"#7A6BA8" }
+];
+// Hanukkah, Lunar New Year and Ramadan follow lunar calendars — add those with
+// dated("2026-12-04") entries for the years you need.
+
+function fixed(m,d){ return y => new Date(y, m-1, d); }
+function nth(m,wd,n){
+  return y => {
+    const first = new Date(y, m-1, 1);
+    return new Date(y, m-1, 1 + ((wd - first.getDay() + 7) % 7) + (n-1)*7);
+  };
+}
+function lastOf(m,wd){
+  return y => {
+    const end = new Date(y, m, 0);
+    return new Date(y, m-1, end.getDate() - ((end.getDay() - wd + 7) % 7));
+  };
+}
+function dated(iso){ const [y,m,d] = iso.split('-').map(Number); return () => new Date(y,m-1,d); }
+function shift(rule,days){ return y => { const dt = rule(y); dt.setDate(dt.getDate()+days); return dt; }; }
+function easterRule(y){
+  const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,
+        f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,
+        i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,
+        mth=Math.floor((a+11*h+22*l)/451),
+        mo=Math.floor((h+l-7*mth+114)/31), da=((h+l-7*mth+114)%31)+1;
+  return new Date(y, mo-1, da);
+}
+
+const DAY_MS = 86400000;
+const midnight = dt => new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+
+function renderCalendar(now){
+  const today = midnight(now), y = today.getFullYear();
+  const all = [];
+  [y, y+1].forEach(yy => CALENDAR.forEach(ev => {
+    let dt; try { dt = ev.when(yy); } catch(e){ return; }
+    if (dt && !isNaN(dt)) all.push({ ev, date: midnight(dt) });
+  }));
+  // school breaks from calendar.js count down too
+  CLOSURES.forEach(c => {
+    if (c.to.getTime() - c.from.getTime() < 86400000) return;   // single days already covered
+    all.push({ ev: { name: c.label, icon: '\u{1F3D6}\u{FE0F}', color: '#3E7F8C', days: 21 },
+               date: midnight(c.from) });
+  });
+  all.sort((a,b) => a.date - b.date);
+
+  const el = document.getElementById('special');
+  el.className = 'special'; el.textContent = '';
+
+  const todays = all.find(o => +o.date === +today);
+  if (todays){
+    el.innerHTML = '<span>' + todays.ev.icon + '</span><span>' +
+                   (todays.ev.greeting || todays.ev.name) + '</span>';
+    el.style.setProperty('--chip', todays.ev.color);
+    el.style.setProperty('--chipink', '#fff');
+    el.classList.add('on');
+    return;
+  }
+  for (const o of all){
+    if (o.date <= today) continue;
+    const n = Math.round((o.date - today) / DAY_MS);
+    if (n > (o.ev.days || 14)) continue;
+    el.innerHTML = '<span>' + o.ev.icon + '</span><span>' +
+      (n === 1 ? o.ev.name + ' is tomorrow' : n + ' days until ' + o.ev.name) + '</span>';
+    el.style.setProperty('--chip', '#E7ECEF');
+    el.style.setProperty('--chipink', '#17222D');
+    el.classList.add('on');
+    return;
+  }
+}
+
+/* ============================================================================
+   3. CLOCK AND DATE
+   ============================================================================ */
+const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const MONTHS = ["January","February","March","April","May","June","July",
+                "August","September","October","November","December"];
+
+function fmt(t){
+  const h = Math.floor(t + 1e-9), m = Math.round((t - h) * 60);
+  let hh = h % 12; if (hh === 0) hh = 12;
+  return hh + ":" + String(m).padStart(2,'0');
+}
+function ampm(t){ return Math.floor(t + 1e-9) >= 12 ? "pm" : "am"; }
+
+function setIcon(el, icon){
+  if (typeof icon === 'string' && icon.slice(0,4) === 'img:'){
+    el.innerHTML = '';
+    const im = document.createElement('img');
+    im.src = icon.slice(4); im.alt = '';
+    el.appendChild(im);
+  } else {
+    el.textContent = icon;
+  }
+}
+
+/* ============================================================================
+   3b. READING THE SCHEDULE FILE
+   ============================================================================ */
+function parseCSV(text){
+  const rows = []; let row = [], field = '', quoted = false;
+  for (let i = 0; i < text.length; i++){
+    const c = text[i];
+    if (quoted){
+      if (c === '"'){ if (text[i+1] === '"'){ field += '"'; i++; } else quoted = false; }
+      else field += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ','){ row.push(field); field = ''; }
+    else if (c === '\n'){ row.push(field); rows.push(row); row = []; field = ''; }
+    else if (c !== '\r') field += c;
+  }
+  if (field.length || row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+
+/* Accepts 8:00, 8:00 AM, 13:30, 1:30 PM. A bare 1:00-6:59 is read as afternoon,
+   since no school day starts then. */
+function parseTime(s){
+  if (!s) return null;
+  const m = String(s).trim().match(/^(\d{1,2})[:.]?(\d{2})?\s*(a\.?m?\.?|p\.?m?\.?)?$/i);
+  if (!m) return null;
+  let h = +m[1]; const min = m[2] ? +m[2] : 0;
+  if (h > 23 || min > 59) return null;
+  const ap = m[3] ? m[3][0].toLowerCase() : '';
+  if (ap === 'p' && h < 12) h += 12;
+  else if (ap === 'a' && h === 12) h = 0;
+  else if (!ap && h >= 1 && h <= 6) h += 12;
+  return h + min/60;
+}
+
+const DAYMAP = {su:0,sun:0,sunday:0,m:1,mo:1,mon:1,monday:1,tu:2,tue:2,tues:2,tuesday:2,
+  w:3,we:3,wed:3,wednesday:3,th:4,thu:4,thur:4,thurs:4,thursday:4,
+  f:5,fr:5,fri:5,friday:5,sa:6,sat:6,saturday:6,daily:-1,everyday:-1,all:-1};
+function parseDays(s){
+  if (!s || !s.trim()) return null;
+  const set = [];
+  s.toLowerCase().split(/[\s,\/+;&-]+/).forEach(tok => {
+    const v = DAYMAP[tok];
+    if (v === -1) return;
+    if (v !== undefined && set.indexOf(v) === -1) set.push(v);
+  });
+  return set.length ? set : null;
+}
+
+function parseSchedule(text){
+  const rows = [], errors = [];
+  parseCSV(text).forEach((cells, i) => {
+    const c = cells.map(x => x.trim());
+    if (!c.join('').trim()) return;
+    if (c[0].charAt(0) === '#') return;
+    if (/^start$/i.test(c[0])) return;                  // header row
+    const start = parseTime(c[0]);
+    if (start === null){ errors.push('Line ' + (i+1) + ': can\u2019t read the time \u201c' + c[0] + '\u201d'); return; }
+    const name = c[2] || '';
+    if (!name){ errors.push('Line ' + (i+1) + ': no activity name'); return; }
+    let end = null;
+    if (c[1]){
+      end = parseTime(c[1]);
+      if (end === null) errors.push('Line ' + (i+1) + ': can\u2019t read the end time \u201c' + c[1] + '\u201d');
+    }
+    rows.push({ start, end, name, icon: c[3] || '', detail: c[4] || '',
+                days: parseDays(c[5]), block: (c[6] || '').trim().toLowerCase() });
+  });
+  return { rows, errors };
+}
+
+/* Pick out the rows for one weekday and fill in any missing end times. */
+function buildToday(dayIndex, date){
+  const closed = date ? closureFor(date) : null;
+  if (closed){ SCHEDULE = []; return; }
+  const block = date ? String(blockFor(date)).toLowerCase() : '';
+  const rows = RAW_ROWS
+    .filter(r => !r.days || r.days.indexOf(dayIndex) !== -1)
+    .filter(r => !r.block || r.block === block)
+    .slice().sort((a,b) => a.start - b.start);
+  SCHEDULE = rows.map((r, i) => {
+    let end = r.end;
+    if (end === null || end === undefined) end = (i+1 < rows.length) ? rows[i+1].start : r.start + 0.5;
+    if (end <= r.start) end = r.start + 0.25;
+    let note = r.detail;
+    if (/lunch/i.test(r.name)){
+      const menu = date ? lunchFor(date) : '';
+      if (menu) note = menu;
+    }
+    return [r.start, end, r.name, note, r.icon || '\u2B50'];
+  });
+}
+
+let sourceLabel = '', sourceProblem = '', calendarProblem = '';
+function paintStatus(){
+  const el = document.getElementById('status');
+  const p = [sourceProblem, calendarProblem].filter(x => x).join('  \u00b7  ');
+  el.textContent = p ? sourceLabel + ' \u2014 ' + p : sourceLabel;
+  el.classList.toggle('warn', !!p);
+}
+
+function applySchedule(text, label){
+  const r = parseSchedule(text);
+  if (!r.rows.length){
+    sourceProblem = 'no activities found in ' + label + ', using the built-in copy';
+    paintStatus();
+    return false;
+  }
+  RAW_ROWS = r.rows;
+  sourceLabel = label;
+  sourceProblem = r.errors.slice(0,2).join('  \u00b7  ');
+  lastDay = ''; stripBuilt = false;
+  paintStatus();
+  return true;
+}
+
+async function fetchFirst(urls){
+  for (const [url, label] of urls){
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (res.ok) return [await res.text(), label];
+    } catch(e){ /* not reachable */ }
+  }
+  return null;
+}
+
+async function loadRemote(){
+  const sched = [];
+  if (SCHEDULE_URL) sched.push([SCHEDULE_URL, 'Google Sheet']);
+  if (location.protocol !== 'file:') sched.push(['schedule.csv', 'schedule.csv']);
+  const got = await fetchFirst(sched);
+  if (got && applySchedule(got[0], got[1])) { /* applied */ }
+
+  const cal = [];
+  if (CALENDAR_URL) cal.push([CALENDAR_URL, 'calendar']);
+  if (location.protocol !== 'file:') cal.push(['calendar.csv', 'calendar']);
+  const c = await fetchFirst(cal);
+  if (c){ parseSchoolCalendar(c[0]); lastDay = ''; }
+
+  const lun = [];
+  if (LUNCH_URL) lun.push([LUNCH_URL, 'lunch']);
+  if (location.protocol !== 'file:') lun.push(['lunch.csv', 'lunch']);
+  const l = await fetchFirst(lun);
+  if (l){ parseLunch(l[0]); lastDay = ''; }
+
+  const wrd = [];
+  if (WORDS_URL) wrd.push([WORDS_URL, 'words']);
+  if (location.protocol !== 'file:') wrd.push(['words.csv', 'words']);
+  const w = await fetchFirst(wrd);
+  if (w){ const parsed = parseWords(w[0]); if (parsed.length){ WORDS = parsed; lastDay = ''; } }
+
+  tick();
+}
+
+/* ============================================================================
+   3c. SCHOOL YEAR CALENDAR, LUNCH MENU, HELPER OF THE DAY
+   ============================================================================ */
+let YEAR_START = null, YEAR_END = null;
+let CLOSURES = [];                 // {from, to, label}
+let CYCLE = [], CYCLE_START = null, DAY_PINS = {};
+let LUNCH_BY_DATE = {}, LUNCH_BY_WEEKDAY = {}, LUNCH_DEFAULT = '';
+let ROSTER = [], HELPER_LABEL = 'Helper today';
+
+const key = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') +
+                 '-' + String(d.getDate()).padStart(2,'0');
+
+function parseDate(s){
+  const m = String(s).trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (!m) return null;
+  const d = new Date(+m[1], +m[2]-1, +m[3]);
+  return isNaN(d) ? null : d;
+}
+
+function parseSchoolCalendar(text){
+  const errors = [];
+  YEAR_START = YEAR_END = null; CLOSURES = []; CYCLE = []; CYCLE_START = null; DAY_PINS = {};
+  parseCSV(text).forEach((cells, i) => {
+    const c = cells.map(x => x.trim());
+    if (!c.join('').trim() || c[0].charAt(0) === '#') return;
+    const k = c[0].toLowerCase();
+    if (k === 'first day' || k === 'last day'){
+      const d = parseDate(c[1]);
+      if (!d){ errors.push('Line ' + (i+1) + ': can\u2019t read the date \u201c' + c[1] + '\u201d'); return; }
+      if (k === 'first day') YEAR_START = d; else YEAR_END = d;
+    } else if (k === 'no school'){
+      const parts = String(c[1] || '').split(/\s+to\s+/i);
+      const from = parseDate(parts[0]);
+      const to = parts[1] ? parseDate(parts[1]) : from;
+      if (!from || !to){ errors.push('Line ' + (i+1) + ': can\u2019t read the date \u201c' + c[1] + '\u201d'); return; }
+      CLOSURES.push({ from, to, label: c[2] || 'No school' });
+    } else if (k === 'cycle'){
+      CYCLE = c.slice(1).filter(x => x);
+    } else if (k === 'cycle start' || k === 'cycle starts'){
+      CYCLE_START = parseDate(c[1]);
+      if (!CYCLE_START) errors.push('Line ' + (i+1) + ': can\u2019t read the date \u201c' + c[1] + '\u201d');
+    } else if (k === 'day'){
+      const d = parseDate(c[1]);
+      if (d && c[2]) DAY_PINS[key(d)] = c[2].trim();
+      else errors.push('Line ' + (i+1) + ': needs a date and a rotation label');
+    } else {
+      errors.push('Line ' + (i+1) + ': don\u2019t know what \u201c' + c[0] + '\u201d means');
+    }
+  });
+  return errors;
+}
+
+/* Why is there no school? Returns a label, or null if school is on. */
+function closureFor(d){
+  if (d.getDay() === 0 || d.getDay() === 6) return 'Weekend';
+  if (YEAR_START && d < YEAR_START) return 'Summer break';
+  if (YEAR_END && d > YEAR_END) return 'Summer break';
+  const t = d.getTime();
+  for (const c of CLOSURES){
+    if (t >= c.from.getTime() && t <= c.to.getTime() + 82800000) return c.label;
+  }
+  return null;
+}
+const isSchoolDay = d => closureFor(d) === null;
+
+function countSchoolDays(from, to){
+  let n = 0;
+  const d = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+  const stop = to.getTime();
+  let guard = 0;
+  while (d.getTime() <= stop && guard++ < 1000){
+    if (isSchoolDay(d)) n++;
+    d.setDate(d.getDate() + 1);
+  }
+  return n;
+}
+
+/* Which day of the block rotation. Days off are skipped, so a Monday holiday
+   does not flip the whole rest of the year. */
+function blockFor(d){
+  if (DAY_PINS[key(d)]) return DAY_PINS[key(d)];
+  if (!CYCLE.length || !CYCLE_START || !isSchoolDay(d)) return '';
+  if (d < CYCLE_START) return '';
+  const n = countSchoolDays(CYCLE_START, d);
+  return n > 0 ? CYCLE[(n - 1) % CYCLE.length] : '';
+}
+
+function parseLunch(text){
+  LUNCH_BY_DATE = {}; LUNCH_BY_WEEKDAY = {}; LUNCH_DEFAULT = '';
+  parseCSV(text).forEach(cells => {
+    const c = cells.map(x => x.trim());
+    if (!c.join('').trim() || c[0].charAt(0) === '#') return;
+    const menu = c.slice(1).filter(x => x).join(', ');
+    if (!menu) return;
+    const k = c[0].toLowerCase();
+    if (k === 'default'){ LUNCH_DEFAULT = menu; return; }
+    const d = parseDate(c[0]);
+    if (d){ LUNCH_BY_DATE[key(d)] = menu; return; }
+    const wd = DAYMAP[k];
+    if (wd !== undefined && wd >= 0) LUNCH_BY_WEEKDAY[wd] = menu;
+  });
+}
+function lunchFor(d){
+  return LUNCH_BY_DATE[key(d)] || LUNCH_BY_WEEKDAY[d.getDay()] || LUNCH_DEFAULT || '';
+}
+
+/* A fair turn, not a coin flip: everyone gets a day before anyone repeats.
+   The order is reshuffled each time round so it is not the same queue twice. */
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function shuffled(list, seed){
+  const a = list.slice(), rnd = mulberry32(seed + 1);
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(rnd() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function helperFor(d){
+  if (!ROSTER.length || !isSchoolDay(d)) return '';
+  const base = YEAR_START && d >= YEAR_START ? YEAR_START : new Date(d.getFullYear(), 0, 1);
+  const n = countSchoolDays(base, d);
+  if (n <= 0) return '';
+  const i = n - 1;
+  return shuffled(ROSTER, Math.floor(i / ROSTER.length))[i % ROSTER.length];
+}
+
+/* ============================================================================
+   4. FIRST / THEN, TIMER, VISUAL SCHEDULE
+   ============================================================================ */
+let stripBuilt = false, primedFor = -1, primesFired = {}, lastDay = '';
+
+function buildStrip(){
+  const strip = document.getElementById('strip');
+  strip.innerHTML = '';
+  SCHEDULE.forEach(([start,,name,,icon], i) => {
+    const s = document.createElement('div');
+    s.className = 'slot'; s.dataset.i = i;
+    const tm = document.createElement('span'); tm.className = 's-time'; tm.textContent = fmt(start);
+    const ic = document.createElement('span'); ic.className = 's-icon'; ic.setAttribute('aria-hidden','true');
+    setIcon(ic, icon);
+    const nm = document.createElement('span'); nm.className = 's-name'; nm.textContent = name;
+    s.append(tm, ic, nm);
+    strip.appendChild(s);
+  });
+  stripBuilt = true;
+}
+
+function tick(){
+  const now = new Date();
+  const nowT = now.getHours() + now.getMinutes()/60 + now.getSeconds()/3600;
+  const todayKey = key(now);
+  if (todayKey !== lastDay){
+    lastDay = todayKey;
+    buildToday(now.getDay(), now);
+    stripBuilt = false;
+
+    const bl = blockFor(now);
+    const dt = document.getElementById('daytype');
+    dt.textContent = bl ? (/^[a-z0-9]$/i.test(bl) ? bl + ' day' : bl) : '';
+    dt.classList.toggle('on', !!bl);
+
+    const who = helperFor(now);
+    const hp = document.getElementById('helper');
+    hp.innerHTML = who ? HELPER_LABEL + ' <b>' + who + '</b>' : '';
+    hp.classList.toggle('on', !!who);
+
+    renderWord(now);
+
+    const menu = isSchoolDay(now) ? lunchFor(now) : '';
+    const lc = document.getElementById('lunchChip');
+    lc.innerHTML = menu ? '<span>\u{1F37D}\u{FE0F}</span><span>' + menu + '</span>' : '';
+    lc.classList.toggle('on', !!menu);
+  }
+  const schoolDay = SCHEDULE.length > 0;
+
+  // clock + date
+  document.getElementById('clock').textContent = fmt(now.getHours() + now.getMinutes()/60) + ' ' + ampm(nowT);
+  document.getElementById('weekday').textContent = DAYS[now.getDay()];
+  document.getElementById('datenum').textContent = MONTHS[now.getMonth()] + ' ' + now.getDate();
+  renderCalendar(now);
+
+  if (!stripBuilt) buildStrip();
+
+  // which activity
+  let cur = -1;
+  for (let i = 0; i < SCHEDULE.length; i++){
+    if (nowT >= SCHEDULE[i][0] && nowT < SCHEDULE[i][1]){ cur = i; break; }
+  }
+  const beforeSchool = schoolDay && nowT < SCHEDULE[0][0];
+  const afterSchool  = schoolDay && nowT >= SCHEDULE[SCHEDULE.length-1][1];
+
+  const nowCard = document.getElementById('nowCard');
+  const thenCard = document.getElementById('thenCard');
+  const timer = document.getElementById('timer');
+  nowCard.classList.remove('p2','p1','p30');
+
+  const show = (which, item, label, detail) => {
+    document.getElementById(which + 'Name').textContent = item ? item[2] : '';
+    document.getElementById(which + 'Detail').textContent = detail !== undefined ? detail : (item ? item[3] : '');
+    setIcon(document.getElementById(which + 'Icon'), item ? item[4] : '');
+    if (label !== undefined && which === 'now') document.getElementById('nowLabel').textContent = label;
+  };
+
+  if (!schoolDay){
+    show('now', null, 'Today'); 
+    document.getElementById('nowName').textContent = 'No school';
+    const why = closureFor(now);
+    document.getElementById('nowDetail').textContent =
+      (why && why !== 'Weekend') ? why : '';
+    setIcon(document.getElementById('nowIcon'), "\u{1F3E1}");
+    thenCard.parentNode.classList.add('solo');
+    timer.classList.add('hide');
+  } else if (beforeSchool){
+    thenCard.parentNode.classList.remove('solo');
+    show('now', SCHEDULE[0], 'Soon', 'Starts at ' + fmt(SCHEDULE[0][0]) + ' ' + ampm(SCHEDULE[0][0]));
+    show('then', SCHEDULE[1]);
+    timer.classList.add('hide');
+  } else if (afterSchool || cur === -1){
+    show('now', null, 'Today');
+    document.getElementById('nowName').textContent = 'All done';
+    document.getElementById('nowDetail').textContent = 'See you tomorrow';
+    setIcon(document.getElementById('nowIcon'), "\u{2B50}");
+    thenCard.parentNode.classList.add('solo');
+    timer.classList.add('hide');
+  } else {
+    thenCard.parentNode.classList.remove('solo');
+    const [s, e] = SCHEDULE[cur];
+    show('now', SCHEDULE[cur], LABEL_NOW);
+    document.getElementById('nowLabel').textContent = LABEL_NOW;
+    if (cur + 1 < SCHEDULE.length) show('then', SCHEDULE[cur+1]);
+    else {
+      document.getElementById('thenName').textContent = 'Go home';
+      document.getElementById('thenDetail').textContent = '';
+      setIcon(document.getElementById('thenIcon'), "\u{1F3E1}");
+    }
+
+    // countdown
+    timer.classList.remove('hide');
+    const total = (e - s) * 3600, gone = (nowT - s) * 3600;
+    const remain = Math.max(0, Math.round(total - gone));
+    document.getElementById('bar').style.width = Math.min(100, (gone/total)*100).toFixed(2) + '%';
+
+    const leftEl = document.getElementById('left');
+    if (remain > 90) leftEl.textContent = Math.ceil(remain/60) + ' minutes left';
+    else if (remain > 60) leftEl.textContent = '2 minutes left';
+    else if (remain > 30) leftEl.textContent = '1 minute left';
+    else if (remain > 0)  leftEl.textContent = '30 seconds left';
+    else leftEl.textContent = 'Time to switch';
+
+    if (remain <= 30) nowCard.classList.add('p30');
+    else if (remain <= 60) nowCard.classList.add('p1');
+    else if (remain <= 120) nowCard.classList.add('p2');
+
+    // priming chime, once per threshold per activity
+    if (primedFor !== cur){ primedFor = cur; primesFired = {}; }
+    PRIME.forEach(p => {
+      if (remain <= p && remain > p - 2 && !primesFired[p]){
+        primesFired[p] = true;
+        chime(p);
+      }
+    });
+  }
+
+  document.getElementById('strip').classList.toggle('empty', !schoolDay);
+
+  // visual schedule states
+  document.querySelectorAll('.slot').forEach((el, i) => {
+    el.className = 'slot';
+    if (!schoolDay) return;
+    if (i === cur) el.classList.add('now');
+    else if (i === cur + 1 || (cur === -1 && beforeSchool && i === 0)) el.classList.add('next');
+    else if (nowT >= SCHEDULE[i][1]) el.classList.add('done');
+  });
+}
+
+/* ============================================================================
+   4b. WORD OF THE DAY
+   ============================================================================ */
+let WORDS = [], BANK_SIZE = 6, wordToday = null, bankSolved = false, practiceSeed = 0;
+
+const BUILT_IN_WORDS = `
+word, picture, sentence, group
+more, \u2795, I want more., core
+help, \u{1F64B}, I need help., core
+break, \u{1F9E9}, I need a break., core
+stop, \u{1F6D1}, Please stop., core
+yes, \u{1F44D}, Yes please., core
+no, \u{1F44E}, No thank you., core
+`;
+
+function parseWords(text){
+  const out = [];
+  parseCSV(text).forEach(cells => {
+    const c = cells.map(x => x.trim());
+    if (!c.join('').trim() || c[0].charAt(0) === '#') return;
+    if (/^word$/i.test(c[0])) return;
+    if (!c[0]) return;
+    out.push({ word: c[0], icon: c[1] || '\u2B50', sentence: c[2] || '', group: (c[3] || 'all').toLowerCase() });
+  });
+  return out;
+}
+
+/* One word per school day, working through the list in a shuffled order that
+   changes each time round. Stable for the whole day. */
+function wordFor(d){
+  if (!WORDS.length) return null;
+  const base = YEAR_START && d >= YEAR_START ? YEAR_START : new Date(d.getFullYear(), 0, 1);
+  let n = countSchoolDays(base, d);
+  if (n <= 0) n = 1;
+  const i = (n - 1) + practiceSeed;
+  return shuffled(WORDS, Math.floor(i / WORDS.length))[i % WORDS.length];
+}
+
+/* Fill the array with words from the same group so the choice is a real one.
+   Positions are fixed for the day so they do not move under the student. */
+function buildBank(target, seed){
+  const size = Math.max(2, Math.min(8, BANK_SIZE));
+  const same = WORDS.filter(w => w.group === target.group && w.word !== target.word);
+  const rest = WORDS.filter(w => w.group !== target.group);
+  const pool = shuffled(same, seed).concat(shuffled(rest, seed + 7));
+  const picked = [target].concat(pool.slice(0, size - 1));
+  return shuffled(picked, seed + 13);
+}
+
+function speak(text){
+  if (!soundOn || !text || !('speechSynthesis' in window)) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.8; u.pitch = 1;
+    speechSynthesis.speak(u);
+  } catch(e){}
+}
+
+function setPic(el, icon){
+  if (typeof icon === 'string' && icon.slice(0,4) === 'img:'){
+    el.innerHTML = ''; const im = document.createElement('img'); im.src = icon.slice(4); im.alt = '';
+    el.appendChild(im);
+  } else el.textContent = icon;
+}
+
+function renderWord(d){
+  const w = wordFor(d);
+  wordToday = w; bankSolved = false;
+  const bank = document.getElementById('bank');
+  if (!w){ bank.innerHTML = ''; return; }
+
+  setPic(document.getElementById('wIcon'), w.icon);
+  document.getElementById('wWord').textContent = w.word;
+  document.getElementById('wSent').textContent = w.sentence;
+  const prompt = document.getElementById('wPrompt');
+  prompt.textContent = 'Find ' + w.word + '.';
+  prompt.classList.remove('good');
+
+  const seed = Math.abs(hashStr(w.word)) + practiceSeed;
+  const list = buildBank(w, seed);
+  bank.style.setProperty('--cols', list.length <= 2 ? list.length : list.length <= 4 ? 2 : list.length <= 6 ? 3 : 4);
+  bank.innerHTML = '';
+  list.forEach(item => {
+    const b = document.createElement('button');
+    b.className = 'bword';
+    const pic = document.createElement('span'); pic.className = 'b-pic';
+    pic.setAttribute('aria-hidden','true'); setPic(pic, item.icon);
+    const lab = document.createElement('span'); lab.textContent = item.word;
+    b.append(pic, lab);
+    b.addEventListener('click', () => pickWord(item, b));
+    bank.appendChild(b);
+  });
+}
+
+function hashStr(s){
+  let h = 0;
+  for (let i = 0; i < s.length; i++){ h = (h * 31 + s.charCodeAt(i)) | 0; }
+  return h;
+}
+
+function pickWord(item, btn){
+  if (!wordToday) return;
+  if (item.word === wordToday.word){
+    document.querySelectorAll('.bword').forEach(x => x.classList.remove('miss','hint'));
+    btn.classList.add('right');
+    bankSolved = true;
+    const p = document.getElementById('wPrompt');
+    p.textContent = 'Yes! ' + (wordToday.sentence || wordToday.word);
+    p.classList.add('good');
+    speak(wordToday.sentence || wordToday.word);
+  } else {
+    speak(item.word);
+    btn.classList.add('miss');
+    setTimeout(() => btn.classList.remove('miss'), 900);
+    // least-to-most: after a miss, show where the answer is
+    document.querySelectorAll('.bword').forEach(x => {
+      if (x.querySelector('span:last-child').textContent === wordToday.word) x.classList.add('hint');
+    });
+  }
+}
+
+/* tabs */
+function showView(which){
+  const wea = which === 'weather';
+  document.getElementById('viewWeather').hidden = !wea;
+  document.getElementById('viewWord').hidden = wea;
+  document.getElementById('tabWeather').classList.toggle('on', wea);
+  document.getElementById('tabWord').classList.toggle('on', !wea);
+  document.getElementById('tabWeather').setAttribute('aria-selected', String(wea));
+  document.getElementById('tabWord').setAttribute('aria-selected', String(!wea));
+  document.getElementById('newWordBtn').hidden = wea;
+  if (wea) requestAnimationFrame(resizeCanvas);
+}
+
+/* ============================================================================
+   5. SOUND
+   ============================================================================ */
+let audio = null, soundOn = true;
+function ac(){
+  if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+  if (audio.state === 'suspended') audio.resume();
+  return audio;
+}
+function noise(a, sec){
+  const buf = a.createBuffer(1, Math.ceil(a.sampleRate*sec), a.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+  const s = a.createBufferSource(); s.buffer = buf; return s;
+}
+function tone(a,f,at,dur,peak,type){
+  const o=a.createOscillator(), g=a.createGain();
+  o.type=type||'sine'; o.frequency.value=f;
+  g.gain.setValueAtTime(0.0001,a.currentTime+at);
+  g.gain.exponentialRampToValueAtTime(peak,a.currentTime+at+0.03);
+  g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+at+dur);
+  o.connect(g).connect(a.destination);
+  o.start(a.currentTime+at); o.stop(a.currentTime+at+dur+0.05);
+}
+
+/* soft, low, non-startling — one note for 2 min, two for 1 min, three for 30 sec */
+function chime(seconds){
+  if (!soundOn) return;
+  try {
+    const a = ac();
+    const n = seconds === 120 ? 1 : seconds === 60 ? 2 : 3;
+    for (let i = 0; i < n; i++) tone(a, 587.33, i*0.28, 0.5, 0.07, 'sine');
+  } catch(e){}
+}
+
+const SOUNDS = {
+  sunny(a){ [523.25,659.25,783.99].forEach((f,i)=>tone(a,f,i*0.10,0.5,0.11,'triangle')); },
+  cloudy(a){ [196,246.94].forEach((f,i)=>tone(a,f,i*0.05,1.1,0.08,'sine')); },
+  rainy(a){
+    const s=noise(a,1.5), f=a.createBiquadFilter(), g=a.createGain();
+    f.type='lowpass'; f.frequency.value=1100;
+    g.gain.setValueAtTime(0.0001,a.currentTime);
+    g.gain.linearRampToValueAtTime(0.15,a.currentTime+0.3);
+    g.gain.linearRampToValueAtTime(0.0001,a.currentTime+1.45);
+    s.connect(f).connect(g).connect(a.destination); s.start();
+  },
+  windy(a){
+    const s=noise(a,1.9), f=a.createBiquadFilter(), g=a.createGain();
+    f.type='bandpass'; f.Q.value=1.2;
+    f.frequency.setValueAtTime(320,a.currentTime);
+    f.frequency.linearRampToValueAtTime(820,a.currentTime+0.9);
+    f.frequency.linearRampToValueAtTime(360,a.currentTime+1.8);
+    g.gain.setValueAtTime(0.0001,a.currentTime);
+    g.gain.linearRampToValueAtTime(0.16,a.currentTime+0.45);
+    g.gain.linearRampToValueAtTime(0.0001,a.currentTime+1.8);
+    s.connect(f).connect(g).connect(a.destination); s.start();
+  },
+  snowy(a){ [1318.51,1567.98,1760].forEach((f,i)=>tone(a,f,i*0.18,0.45,0.055,'sine')); },
+  stormy(a){
+    const r=noise(a,2.0), lf=a.createBiquadFilter(), lg=a.createGain();
+    lf.type='lowpass'; lf.frequency.value=160;
+    lg.gain.setValueAtTime(0.0001,a.currentTime);
+    lg.gain.linearRampToValueAtTime(0.26,a.currentTime+0.5);
+    lg.gain.linearRampToValueAtTime(0.0001,a.currentTime+1.95);
+    r.connect(lf).connect(lg).connect(a.destination); r.start();
+  }
+};
+function play(k){ if (!soundOn) return; try { SOUNDS[k](ac()); } catch(e){} }
+
+const ICON_ON  = '<path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a6.8 6.8 0 0 1 0 13.4v2.1a8.9 8.9 0 0 0 0-17.6z"/>';
+const ICON_OFF = '<path d="M4 9v6h4l5 4V5L8 9H4zm15.5 3 2.3-2.3-1.4-1.4L18 10.6l-2.3-2.3-1.4 1.4 2.3 2.3-2.3 2.3 1.4 1.4 2.3-2.3 2.4 2.3 1.4-1.4-2.3-2.3z"/>';
+const sBtn = document.getElementById('soundBtn');
+function paintSound(){
+  document.getElementById('soundIcon').innerHTML = soundOn ? ICON_ON : ICON_OFF;
+  document.getElementById('soundLabel').textContent = soundOn ? 'Sound on' : 'Sound off';
+  sBtn.setAttribute('aria-pressed', String(!soundOn));
+}
+sBtn.addEventListener('click', () => { soundOn = !soundOn; paintSound(); });
+paintSound();
+
+/* ============================================================================
+   6. WEATHER BUTTONS
+   ============================================================================ */
+const RAYS = (() => {
+  let s = '';
+  for (let i=0;i<8;i++){
+    const a = i*Math.PI/4;
+    s += `<line x1="${(36+Math.cos(a)*20).toFixed(1)}" y1="${(36+Math.sin(a)*20).toFixed(1)}" x2="${(36+Math.cos(a)*29).toFixed(1)}" y2="${(36+Math.sin(a)*29).toFixed(1)}"/>`;
+  }
+  return s;
+})();
+const CLOUD = '<circle cx="24" cy="36" r="10"/><circle cx="37" cy="28" r="13"/><circle cx="50" cy="36" r="10"/><rect x="24" y="36" width="26" height="10" rx="5"/>';
+const ICONS = {
+  sunny:  `<g fill="#E8901B"><circle cx="36" cy="36" r="13"/></g><g stroke="#E8901B" stroke-width="5" stroke-linecap="round">${RAYS}</g>`,
+  cloudy: `<g fill="#7E8C9B">${CLOUD}</g>`,
+  rainy:  `<g fill="#5F7F98">${CLOUD}</g><g stroke="#2F7FB5" stroke-width="5" stroke-linecap="round"><line x1="27" y1="52" x2="24" y2="62"/><line x1="38" y1="52" x2="35" y2="62"/><line x1="49" y1="52" x2="46" y2="62"/></g>`,
+  windy:  `<g stroke="#2E8B62" stroke-width="6" stroke-linecap="round" fill="none"><path d="M12 26h30a7 7 0 1 0-7-7"/><path d="M12 40h38a7 7 0 1 1-7 7"/><path d="M12 54h22"/></g>`,
+  snowy:  `<g fill="#8FA3B8">${CLOUD}</g><g fill="#3E6E9E"><circle cx="25" cy="57" r="4"/><circle cx="37" cy="62" r="4"/><circle cx="49" cy="57" r="4"/></g>`,
+  stormy: `<g fill="#6B5F8C">${CLOUD}</g><g fill="#E8A11B"><polygon points="40,48 26,66 34,66 30,72 46,54 37,54 43,48"/></g>`
+};
+const LABELS = { sunny:"Sunny", cloudy:"Cloudy", rainy:"Rainy", windy:"Windy", snowy:"Snowy", stormy:"Stormy" };
+const SENTENCE = {
+  sunny:"It is sunny.", cloudy:"It is cloudy.", rainy:"It is rainy.",
+  windy:"It is windy.", snowy:"It is snowy.", stormy:"It is stormy."
+};
+
+const chips = document.getElementById('chips');
+Object.keys(ICONS).forEach(kind => {
+  const b = document.createElement('button');
+  b.className = 'chip chip-' + kind;
+  b.setAttribute('aria-pressed','false');
+  b.innerHTML = `<svg viewBox="0 0 72 72" aria-hidden="true">${ICONS[kind]}</svg><span>${LABELS[kind]}</span>`;
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed','true');
+    b.classList.add('press'); setTimeout(()=>b.classList.remove('press'),140);
+    document.getElementById('caption').textContent = SENTENCE[kind];
+    play(kind); setScene(kind);
+  });
+  chips.appendChild(b);
+});
+
+/* ============================================================================
+   7. SKY
+   Deliberately calm: slow drift, no strobe, no sudden full-screen flash.
+   ============================================================================ */
+const canvas = document.getElementById('sky');
+const cx2 = canvas.getContext('2d');
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let W=0, H=0, mode='sunny', t=0;
+let clouds=[], drops=[], flakes=[], gusts=[], glow=0, nextGlow=999;
+
+const SKIES = {
+  sunny:['#5FB8EC','#CDEBFF'], cloudy:['#93A5B6','#D8E1E9'], rainy:['#6E869F','#A9BAC8'],
+  windy:['#6FBBE2','#C9E8F6'], snowy:['#8CA3BA','#E4EDF6'], stormy:['#3B495C','#68768A']
+};
+
+function resizeCanvas(){
+  W = canvas.offsetWidth; H = canvas.offsetHeight;
+  if (!W || !H) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(W*dpr); canvas.height = Math.round(H*dpr);
+  cx2.setTransform(dpr,0,0,dpr,0,0);
+  build();
+  if (reduce) draw(0);
+}
+
+function build(){
+  const n = (mode==='stormy'||mode==='rainy') ? 4 : (mode==='cloudy'||mode==='snowy') ? 5 : 3;
+  clouds = [];
+  for (let i=0;i<n;i++) clouds.push({
+    x:Math.random()*W, y:H*(0.14+Math.random()*0.32),
+    s:0.5+Math.random()*0.6, v:(mode==='windy'?26:7)*(0.6+Math.random()*0.8)
+  });
+  drops = [];
+  const dn = mode==='stormy' ? 95 : mode==='rainy' ? 70 : 0;
+  for (let i=0;i<dn;i++) drops.push({x:Math.random()*W,y:Math.random()*H,l:8+Math.random()*11,v:300+Math.random()*180});
+  flakes = [];
+  if (mode==='snowy') for (let i=0;i<55;i++)
+    flakes.push({x:Math.random()*W,y:Math.random()*H,r:1.6+Math.random()*2.6,v:20+Math.random()*28,p:Math.random()*6.3});
+  gusts = [];
+  if (mode==='windy') for (let i=0;i<7;i++)
+    gusts.push({x:Math.random()*W,y:H*(0.2+Math.random()*0.6),w:40+Math.random()*80,v:120+Math.random()*140});
+  nextGlow = mode==='stormy' ? 2.5 : 9999;
+  glow = 0;
+}
+function setScene(k){ mode = k; build(); if (reduce) draw(0); }
+
+function cloudShape(x,y,s,fill){
+  cx2.fillStyle = fill;
+  cx2.beginPath();
+  cx2.arc(x-26*s,y,17*s,0,6.3);
+  cx2.arc(x,y-13*s,25*s,0,6.3);
+  cx2.arc(x+28*s,y,19*s,0,6.3);
+  cx2.rect(x-26*s,y-1*s,54*s,18*s);
+  cx2.fill();
+}
+
+function draw(dt){
+  if (!W || !H) return;
+  const [top,bot] = SKIES[mode];
+  const g = cx2.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,top); g.addColorStop(1,bot);
+  cx2.fillStyle = g; cx2.fillRect(0,0,W,H);
+
+  if (mode==='sunny' || mode==='windy'){
+    const sx=W*0.78, sy=H*0.25, r=Math.min(W,H)*0.14;
+    cx2.save(); cx2.translate(sx,sy); cx2.rotate(t*0.18);
+    cx2.strokeStyle='rgba(255,214,84,.8)'; cx2.lineWidth=Math.max(3,r*0.15); cx2.lineCap='round';
+    for (let i=0;i<10;i++){
+      const a=i*Math.PI/5;
+      cx2.beginPath();
+      cx2.moveTo(Math.cos(a)*r*1.35,Math.sin(a)*r*1.35);
+      cx2.lineTo(Math.cos(a)*r*1.8,Math.sin(a)*r*1.8);
+      cx2.stroke();
+    }
+    cx2.restore();
+    const gl = cx2.createRadialGradient(sx,sy,r*0.4,sx,sy,r*1.5);
+    gl.addColorStop(0,'rgba(255,224,120,.85)'); gl.addColorStop(1,'rgba(255,224,120,0)');
+    cx2.fillStyle=gl; cx2.beginPath(); cx2.arc(sx,sy,r*1.5,0,6.3); cx2.fill();
+    cx2.fillStyle='#FFD34E'; cx2.beginPath(); cx2.arc(sx,sy,r,0,6.3); cx2.fill();
+  }
+
+  const gy = H*0.80;
+  cx2.fillStyle = mode==='snowy' ? '#F3F8FC' : mode==='stormy' ? '#37604A' : '#4EA96E';
+  cx2.beginPath();
+  cx2.moveTo(0,H); cx2.lineTo(0,gy);
+  cx2.quadraticCurveTo(W*0.3, gy-H*0.09, W*0.6, gy-H*0.01);
+  cx2.quadraticCurveTo(W*0.85, gy+H*0.04, W, gy-H*0.035);
+  cx2.lineTo(W,H); cx2.closePath(); cx2.fill();
+
+  const cf = mode==='stormy' ? 'rgba(72,80,98,.95)'
+           : mode==='rainy'  ? 'rgba(126,140,156,.95)'
+           : mode==='cloudy' ? 'rgba(246,249,252,.95)' : 'rgba(255,255,255,.92)';
+  clouds.forEach(c => {
+    c.x += c.v*dt;
+    if (c.x-70 > W) c.x = -70;
+    cloudShape(c.x, c.y, c.s*Math.min(1.5, W/420), cf);
+  });
+
+  if (drops.length){
+    cx2.strokeStyle='rgba(226,242,255,.7)'; cx2.lineWidth=2; cx2.lineCap='round';
+    cx2.beginPath();
+    drops.forEach(d => {
+      d.y += d.v*dt; d.x += 26*dt;
+      if (d.y > H){ d.y = -10; d.x = Math.random()*W; }
+      cx2.moveTo(d.x,d.y); cx2.lineTo(d.x-3,d.y+d.l);
+    });
+    cx2.stroke();
+  }
+
+  if (flakes.length){
+    cx2.fillStyle='rgba(255,255,255,.92)';
+    flakes.forEach(f => {
+      f.y += f.v*dt; f.p += dt; f.x += Math.sin(f.p)*14*dt;
+      if (f.y > H){ f.y = -6; f.x = Math.random()*W; }
+      cx2.beginPath(); cx2.arc(f.x,f.y,f.r,0,6.3); cx2.fill();
+    });
+  }
+
+  if (gusts.length){
+    cx2.strokeStyle='rgba(255,255,255,.55)'; cx2.lineWidth=3; cx2.lineCap='round';
+    gusts.forEach(s => {
+      s.x += s.v*dt;
+      if (s.x-s.w > W){ s.x = -s.w; s.y = H*(0.2+Math.random()*0.6); }
+      cx2.beginPath();
+      cx2.moveTo(s.x,s.y);
+      cx2.quadraticCurveTo(s.x+s.w*0.5, s.y-9, s.x+s.w, s.y);
+      cx2.stroke();
+    });
+  }
+
+  // storm: a slow brightening behind the clouds, never a strobe
+  if (mode==='stormy' && !reduce){
+    nextGlow -= dt;
+    if (nextGlow <= 0){ glow = 1; nextGlow = 5 + Math.random()*5; }
+    if (glow > 0){
+      const gr = cx2.createRadialGradient(W*0.4,H*0.2,0,W*0.4,H*0.2,H*0.9);
+      gr.addColorStop(0,'rgba(255,250,225,'+(glow*0.22).toFixed(3)+')');
+      gr.addColorStop(1,'rgba(255,250,225,0)');
+      cx2.fillStyle = gr; cx2.fillRect(0,0,W,H);
+      glow = Math.max(0, glow - dt*0.9);
+    }
+  }
+}
+
+let last = 0;
+function loop(ts){
+  const dt = last ? Math.min(0.05,(ts-last)/1000) : 0;
+  last = ts; t += dt;
+  draw(dt);
+  requestAnimationFrame(loop);
+}
+
+/* ============================================================================
+   8. START
+   ============================================================================ */
+document.getElementById('fsBtn').addEventListener('click', () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(()=>{});
+});
+
+if (typeof window.SCHOOL_CALENDAR === 'string'){
+  const errs = parseSchoolCalendar(window.SCHOOL_CALENDAR);
+  if (errs.length) calendarProblem = 'calendar.js: ' + errs[0];
+}
+if (typeof window.LUNCH_MENU === 'string') parseLunch(window.LUNCH_MENU);
+WORDS = parseWords(typeof window.WORD_LIST === 'string' ? window.WORD_LIST : BUILT_IN_WORDS);
+if (typeof window.WORD_BANK_SIZE === 'number') BANK_SIZE = window.WORD_BANK_SIZE;
+if (typeof window.ROSTER === 'string')
+  ROSTER = window.ROSTER.split(',').map(x => x.trim()).filter(x => x);
+if (typeof window.HELPER_LABEL === 'string' && window.HELPER_LABEL.trim())
+  HELPER_LABEL = window.HELPER_LABEL.trim();
+
+applySchedule(typeof window.SCHEDULE_CSV === 'string' ? window.SCHEDULE_CSV : BUILT_IN,
+              typeof window.SCHEDULE_CSV === 'string' ? 'schedule.js' : 'built-in schedule');
+document.getElementById('tabWeather').addEventListener('click', () => showView('weather'));
+document.getElementById('tabWord').addEventListener('click', () => showView('word'));
+document.getElementById('wordCard').addEventListener('click', () => {
+  if (wordToday) speak(wordToday.word + '. ' + wordToday.sentence);
+});
+document.getElementById('newWordBtn').addEventListener('click', () => {
+  practiceSeed++; renderWord(new Date());
+});
+
+tick();
+loadRemote();
+setInterval(loadRemote, 300000);   // pick up edits without a reload
+setInterval(tick, 1000);
+requestAnimationFrame(() => resizeCanvas());
+window.addEventListener('resize', resizeCanvas);
+window.addEventListener('load', resizeCanvas);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(resizeCanvas);
+if (!reduce) requestAnimationFrame(loop);
+</script>
+</body>
+</html>
