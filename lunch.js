@@ -29,12 +29,7 @@ window.LUNCH_MENU = `
 2026-09-03, Loco Moco w/ Ulu Gravy, Hapa Rice, Protein Pack, Edamame, Steamed Carrots, Apple Slices
 2026-09-04, Cheese pizza, salad, watermelon
 
-# ---- if your menu is the same every week, use these instead ----
-# Monday,    Chicken katsu, rice, green beans, fruit
-# Tuesday,   Beef stew, rice, salad, fruit
-# Wednesday, Shoyu chicken, rice, corn, fruit
-# Thursday,  Spaghetti, garlic bread, carrots, fruit
-# Friday,    Cheese pizza, salad, fruit
+
 
 default, Check the cafeteria menu
 `;
