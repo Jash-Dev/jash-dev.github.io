@@ -27,7 +27,7 @@ window.LUNCH_MENU = `
 2026-09-01, Beef stew, brown rice, tossed salad, orange
 2026-09-02, Shoyu chicken, rice, corn, apple
 2026-09-03, Spaghetti, garlic bread, carrots, fruit cup
-2026-09-04, Cheese pizza, salad, watermelon
+#2026-09-04, Cheese pizza, salad, watermelon
 
 # ---- if your menu is the same every week, use these instead ----
 # Monday,    Chicken katsu, rice, green beans, fruit
