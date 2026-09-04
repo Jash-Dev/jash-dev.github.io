@@ -328,6 +328,48 @@
   .slot.next{background:var(--panel-2)}
 
   /* ================= chrome ================= */
+  .fs.fs2{right:2.6rem}
+  .editor{
+    position:fixed;inset:0;z-index:30;background:rgba(16,26,36,.8);
+    display:flex;align-items:center;justify-content:center;padding:3vh 3vw;
+  }
+  .editor[hidden]{display:none}
+  .ed-card{
+    background:var(--panel);border-radius:1rem;width:min(64rem,96vw);
+    max-height:94vh;display:flex;flex-direction:column;gap:.6rem;
+    padding:1rem 1.2rem 1.1rem;box-shadow:0 1.2rem 3rem rgba(0,0,0,.45);
+  }
+  .ed-head{display:flex;align-items:center;justify-content:space-between;gap:.8rem}
+  .ed-tabs{display:flex;flex-wrap:wrap;gap:.3rem}
+  .ed-tab{
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.1rem;
+    background:transparent;border:none;cursor:pointer;color:var(--muted);
+    padding:.25em .8em;border-radius:.5rem;
+  }
+  .ed-tab.on{background:var(--teal-soft);color:#1D6259}
+  .ed-tab.dirty::after{content:" \u2022";color:var(--coral)}
+  .ed-help{margin:0;font-size:.92rem;font-weight:600;color:var(--muted);line-height:1.35}
+  .ed-text{
+    flex:1 1 auto;min-height:34vh;resize:vertical;
+    font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;
+    font-size:.92rem;line-height:1.5;color:var(--ink);
+    background:#fff;border:.12rem solid var(--line);border-radius:.6rem;padding:.7rem .8rem;
+    white-space:pre;overflow:auto;
+  }
+  .ed-text:focus{outline:.16rem solid var(--teal);outline-offset:.06rem}
+  .ed-msg{margin:0;font-size:.95rem;font-weight:700;min-height:1.3em;color:var(--muted)}
+  .ed-msg.good{color:#1D6259}
+  .ed-msg.bad{color:#9C3A22}
+  .ed-actions{display:flex;flex-wrap:wrap;gap:.4rem}
+  .ed-btn{
+    font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;
+    background:var(--panel-2);color:var(--ink);border:none;
+    border-radius:.5rem;padding:.5em 1.1em;
+  }
+  .ed-btn:hover{background:#E2DCD1}
+  .ed-primary{background:var(--teal);color:#fff}
+  .ed-primary:hover{background:#256F66}
+
   .modal{
     position:fixed;inset:0;z-index:20;
     background:rgba(16,26,36,.74);
@@ -347,9 +389,16 @@
     font-family:'Fredoka',sans-serif;font-weight:600;font-size:2.6rem;
     margin:.15em 0 .5em;color:var(--ink);
   }
-  .modal-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr;gap:.45rem}
-  .modal-list.two{grid-template-columns:1fr 1fr;gap:.4rem .55rem}
-  .modal-list.dense li{font-size:1.65rem}
+  .modal-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr;gap:.4rem}
+  .modal-list.two{grid-template-columns:1fr 1fr;gap:.35rem .6rem}
+  .modal-list.dense li{font-size:1.5rem}
+  .modal-list li{
+    display:flex;align-items:baseline;gap:.6em;text-align:left;
+  }
+  .modal-list li::before{
+    content:"";flex:0 0 auto;width:.42em;height:.42em;border-radius:50%;
+    background:var(--teal);transform:translateY(-.15em);
+  }
   .modal-list li{
     font-family:'Fredoka',sans-serif;font-weight:500;font-size:2.15rem;line-height:1.15;
     color:var(--ink);background:var(--panel-2);border-radius:.6rem;padding:.35em .7em;
@@ -397,9 +446,30 @@
 </head>
 <body>
 
+<button class="fs fs2" id="editBtn" title="Edit the board" aria-label="Edit the board">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+</button>
 <button class="fs" id="fsBtn" title="Full screen" aria-label="Full screen">
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5v2H6v3H4zm11-5h5v5h-2V6h-3V4zM4 15h2v3h3v2H4v-5zm14 0h2v5h-5v-2h3v-3z"/></svg>
 </button>
+
+<div class="editor" id="editor" hidden>
+  <div class="ed-card">
+    <div class="ed-head">
+      <div class="ed-tabs" id="edTabs"></div>
+      <button class="ed-btn" id="edClose">Close</button>
+    </div>
+    <p class="ed-help" id="edHelp"></p>
+    <textarea class="ed-text" id="edText" spellcheck="false" autocomplete="off"></textarea>
+    <p class="ed-msg" id="edMsg"></p>
+    <div class="ed-actions">
+      <button class="ed-btn ed-primary" id="edSave">Save</button>
+      <button class="ed-btn" id="edRevert">Undo my changes</button>
+      <button class="ed-btn" id="edCopy">Copy</button>
+      <button class="ed-btn" id="edDownload">Download</button>
+    </div>
+  </div>
+</div>
 
 <div class="modal" id="lunchModal" hidden>
   <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="lunchTitle">
@@ -503,12 +573,470 @@
   <footer class="strip" id="strip"></footer>
 </div>
 
-<!-- The schedule lives in schedule.js, next to this file. If it is missing,
-     the built-in copy inside this page is used instead. -->
-<script src="schedule.js"></script>
-<script src="calendar.js"></script>
+<!-- ==========================================================================
+     The lunch menu lives in lunch.js, next to this page.
+     Everything else is set up in the block below — or press the pencil button
+     in the top right of the board and change any of it on screen.
+     ========================================================================== -->
 <script src="lunch.js"></script>
-<script src="words.js"></script>
+
+<script>
+
+/* ###########################################################################
+   SCHEDULE  +  CLASS LIST
+   ########################################################################### */
+
+/* ===========================================================================
+   CLASS SCHEDULE  —  built on the Kawananakoa Middle School bell schedule
+   ---------------------------------------------------------------------------
+   Open this in any plain text editor, change the lines, save, refresh.
+
+       start time , end time , name , picture , note , days , block
+
+   start    8:00 or 8:00 AM or 13:30. A bare 1:00-6:59 is read as afternoon.
+   end      Leave it BLANK and the activity runs until the next one starts.
+            Most rows below do this on purpose — it means no dead gaps on the
+            board, and if you move one activity the ones around it close up.
+   name     One or two words, shown in very large type.
+   picture  An emoji, or img:pictures/math.png for your own symbol file.
+   note     A short line under the name. Wrap it in "quotes" if it has commas.
+   days     Blank = every day. Or M, Tu, W, Th, F. Quotes around a list of
+            several days are tidier but not required.
+   block    Only used if calendar.js defines a rotation. Not needed here —
+            this school's periods are fixed by weekday, so the days column
+            does the whole job.
+
+   --------------------------------------------------------------------------
+   HOW THE PERIODS MAP
+
+   The school runs six periods on a weekly drop rotation:
+
+                    Mon   Tue   Wed   Thu   Fri
+       8:00-8:50     1     6     5     3     2
+       8:55-9:45     2     1     6     4     3
+       9:45-10:00        Recess, every day
+      10:05-10:55     3     2     1     5     4
+      11:00-11:50     4     3     2     6     5
+
+   The first slot of the day is always Arrival, Morning Meeting and Morning
+   Exercise, whatever period number it carries.
+
+   Period 2 is specials, and specials always win — it is the prep period.
+   It moves around the week, so specials land at a different time each day:
+   Monday 8:55, Tuesday 10:05, Wednesday 11:00, Friday 8:15. Thursday has no
+   Period 2 at all, so there are no specials that day.
+
+   On Friday specials take the first slot, so Morning Meeting and Morning
+   Exercise move to 8:55 and the Period 3 Work Block gives way.
+
+   A campus walk follows recess every day, in the ten minutes before the
+   next period starts.
+
+   Every other slot is Work Block. The period number sits in the note so you
+   can see it at a glance without the students having to read it.
+   =========================================================================== */
+
+window.SCHEDULE_CSV = `
+start,  end,   name,              picture, note,                                                   days
+
+# ---- the same every day ----
+8:00,   ,      Arrival,           🎒,      Bags away say hello,
+9:45,   ,      Recess,            🏃,      Outside,
+9:55,   ,      Campus walk,       🚶,      Around the school,
+11:20,  ,      Get ready,         🧼,      Wash hands and line up,
+
+# ---- morning routine, Monday to Thursday (Friday is different, see below) ----
+8:15,   ,      Morning Meeting,   👋,      Calendar and weather,                                   "M, Tu, W, Th"
+8:30,   ,      Morning Exercise,  🤸,      ,                                                       "M, Tu, W, Th"
+11:30,  ,      Lunch,             🍽️,      ,
+12:30,  ,      Break,             🧩,      Sensory area,
+1:00,   ,      Chores,            🧹,      Classroom jobs,
+1:30,   2:00,  Departure,         🚌,      Pick up time,
+
+# ---- Monday: periods 1, 2, 3, 4 ----
+8:55,   ,      Specials,          🎨,      "Art: Tengis, Jayden — P.E.: Josiah, Nathan, Tineafi",   M
+10:05,  ,      Work Block,        📚,      Period 3,                                               M
+11:00,  ,      Work Block,        📚,      Period 4,                                               M
+
+# ---- Tuesday: periods 6, 1, 2, 3 ----
+8:55,   ,      Work Block,        📚,      Period 1,                                               Tu
+10:05,  ,      Specials,          🎨,      "Art: Tengis, Jayden — P.E.: Josiah, Nathan, Tineafi",   Tu
+11:00,  ,      Work Block,        📚,      Period 3,                                               Tu
+
+# ---- Wednesday: periods 5, 6, 1, 2 ----
+# Period 2 is 11:00-11:50, which runs into getting ready for lunch, so
+# specials only get 11:00 to 11:20 here. Flagged in the chat.
+8:55,   ,      Work Block,        📚,      Period 6,                                               W
+10:05,  ,      Work Block,        📚,      Period 1,                                               W
+11:00,  ,      Specials,          🎨,      "Art: Tengis, Jayden — P.E.: Josiah, Nathan, Tineafi",   W
+
+# ---- Thursday: periods 3, 4, 5, 6 — no Period 2 today, so no specials ----
+8:55,   ,      Work Block,        📚,      Period 4,                                               Th
+10:05,  ,      Work Block,        📚,      Period 5,                                               Th
+11:00,  ,      Work Block,        📚,      Period 6,                                               Th
+
+# ---- Friday: periods 2, 3, 4, 5 — Period 2 is first, and specials win.
+#      Morning Meeting and Morning Exercise slide into the 8:55 slot. ----
+8:15,   ,      Specials,          🎨,      "Art: Tengis, Jayden — P.E.: Josiah, Nathan, Tineafi",   F
+8:55,   ,      Morning Meeting,   👋,      Calendar and weather,                                   F
+9:15,   ,      Morning Exercise,  🤸,      ,                                                       F
+10:05,  ,      Work Block,        📚,      Period 4,                                               F
+11:00,  ,      Work Block,        📚,      Period 5,                                               F
+
+# ---------------------------------------------------------------------------
+# Spare rows. Delete the # to switch one on.
+#
+# 12:30, ,     Work Block,        📚,      Period 2 make-up,                                       Th
+# 8:55,  ,     Speech,            💬,      Small group,                                            "M, W, F"
+# ---------------------------------------------------------------------------
+`;
+
+
+/* ===========================================================================
+   CLASS LIST
+   ---------------------------------------------------------------------------
+   First names only, separated by commas. The board picks one helper per day
+   and works through the whole list before anyone repeats, so it is a fair
+   turn rather than a coin flip. Days off are skipped, so a Monday holiday
+   does not cost anyone their turn.
+
+   Leave it blank — window.ROSTER = ""; — and the helper line disappears.
+   =========================================================================== */
+
+window.ROSTER = "Jayden, Josiah, Nathan, Tengis, Tineafi";
+window.HELPER_LABEL = "Helper today";
+
+
+/* ###########################################################################
+   SCHOOL YEAR CALENDAR
+   ########################################################################### */
+
+/* ===========================================================================
+   SCHOOL YEAR CALENDAR
+   ---------------------------------------------------------------------------
+   Two jobs: it tells the board which days there is no school, and which day
+   of your block rotation today is.
+
+   Dates are always year-month-day: 2026-09-07
+
+   Line types:
+
+     first day, 2026-08-03            When the school year starts
+     last day,  2027-05-27            When it ends. Outside these, no school.
+
+     no school, 2026-09-07, Labor Day
+     no school, 2026-10-05 to 2026-10-09, Fall Break
+                                      One date, or a range using "to".
+                                      The label shows on the board that day.
+
+     cycle, A, B                      Your block rotation, in order. Could be
+                                      A, B — or 1, 2, 3, 4, 5, 6 — or
+                                      Blue, Gold. Leave this line out if your
+                                      schedule is the same every week.
+     cycle start, 2026-08-03          The first school day of the rotation.
+
+     day, 2026-09-14, A               Force one date to a particular day of the
+                                      rotation, for when an assembly or a
+                                      cancellation knocks the cycle out of step.
+
+   Weekends are always off — you don't need to list them. Days off are skipped
+   when counting the rotation, so a Monday holiday does not flip your A and B
+   days for the rest of the year.
+
+   The dates below are the Hawaii State Department of Education official
+   2026-2027 calendar, amended March 30, 2026. Check them against what your
+   school sent home — individual campuses add their own days.
+   =========================================================================== */
+
+window.SCHOOL_CALENDAR = `
+first day, 2026-08-03
+last day,  2027-05-27
+
+no school, 2026-08-21, Statehood Day
+no school, 2026-09-07, Labor Day
+no school, 2026-10-05 to 2026-10-09, Fall Break
+no school, 2026-11-03, Election Day
+no school, 2026-11-11, Veterans Day
+no school, 2026-11-26, Thanksgiving
+no school, 2026-11-27, School Holiday
+no school, 2026-12-21 to 2027-01-01, Winter Break
+no school, 2027-01-04, Teacher Work Day
+no school, 2027-01-18, Martin Luther King Jr. Day
+no school, 2027-02-15, Presidents Day
+no school, 2027-03-15 to 2027-03-19, Spring Break
+no school, 2027-03-26, Good Friday
+no school, 2027-03-29, Prince Kuhio Day
+no school, 2027-05-31, Memorial Day
+
+# HIDOE sets one Institute Day during February 8-12 with no students, and the
+# date is chosen per island. Add yours here once your school announces it:
+# no school, 2027-02-10, Institute Day
+
+# Your own campus days go here too:
+# no school, 2026-10-16, Teacher Work Day
+# no school, 2027-04-02, Parent Conferences
+
+# ---------------------------------------------------------------------------
+# BLOCK ROTATION
+# Delete the # marks below and change the labels to match your school.
+# ---------------------------------------------------------------------------
+# cycle, A, B
+# cycle start, 2026-08-03
+#
+# When a fire drill or a snow-in-Hawaii miracle knocks the cycle off, pin it:
+# day, 2026-09-14, A
+`;
+
+
+/* ###########################################################################
+   WORD OF THE DAY
+   ########################################################################### */
+
+/* ===========================================================================
+   WORD OF THE DAY + WORD BANK
+   ---------------------------------------------------------------------------
+   One word per line:
+
+       word , picture , sentence , group
+
+   word      What the class is learning.
+   picture   An emoji, or img:pictures/help.png for your own symbol.
+             LEAVE IT BLANK for sight words — the tile then shows the word on
+             its own, which is the point. Matching a word to a word is the
+             skill; a picture would let a student answer without reading.
+   sentence  A short model sentence using the word. Four to six words.
+   group     The word bank fills with other words from the SAME group, so the
+             choice is a real one. Sight words only compete against sight
+             words at the same level.
+
+   HOW MANY CHOICES: WORD_BANK_SIZE below takes 2, 3, 4, 6, or 8. Match it to
+   the array the student is working on. Start small and grow it.
+
+   WHICH WORDS: WORD_FOCUS below picks which groups are in rotation. Leave it
+   blank for everything. Or name groups to drill one set for a few weeks:
+
+       window.WORD_FOCUS = "sight pp";              just pre-primer
+       window.WORD_FOCUS = "sight pp, sight p";     pre-primer and primer
+       window.WORD_FOCUS = "core, action";          back to the AAC words
+
+   That matters here. With everything switched on the list runs 182 words,
+   which is about one school year — each word comes up once. Narrowing to one
+   group brings a word back every few weeks instead, which is closer to the
+   repetition these goals call for.
+
+   Tile positions stay put all day. Students who navigate by motor memory
+   should not have the target move on them.
+   =========================================================================== */
+
+window.WORD_BANK_SIZE = 6;
+window.WORD_FOCUS = "";
+
+window.WORD_LIST = `
+word,        picture, sentence,                     group
+
+# ---- core words: the ones that unlock the most, and the ones the AAC
+#      devices in this room are built around ----
+more,        ➕,      I want more.,                 core
+help,        🙋,      I need help.,                 core
+break,       🧩,      I need a break.,              core
+stop,        🛑,      Please stop.,                 core
+go,          ➡️,      It is time to go.,            core
+want,        🤲,      I want a snack.,              core
+all done,    ✅,      I am all done.,               core
+yes,         👍,      Yes please.,                  core
+no,          👎,      No thank you.,                core
+look,        👀,      Look at me.,                  core
+turn,        🔁,      It is my turn.,               core
+wait,        ⏳,      I can wait.,                  core
+
+# ---- actions ----
+eat,         🍴,      I eat my lunch.,              action
+drink,       🥤,      I drink water.,               action
+sit,         🪑,      I sit down.,                  action
+stand,       🧍,      I stand up.,                  action
+walk,        🚶,      We walk in line.,             action
+wash,        🧼,      I wash my hands.,             action
+open,        🔓,      Open the box.,                action
+give,        🤝,      I give it to you.,            action
+read,        📖,      I read a book.,               action
+write,       ✏️,      I write my name.,             action
+listen,      👂,      I listen to my teacher.,      action
+
+# ---- things in our room ----
+backpack,    🎒,      My backpack is here.,         thing
+chair,       💺,      I sit on my chair.,           thing
+book,        📚,      I want that book.,            thing
+pencil,      🖍️,      I need a pencil.,             thing
+paper,       📄,      Give me some paper.,          thing
+cup,         🥛,      My cup is full.,              thing
+water,       💧,      I want water.,                thing
+snack,       🍎,      It is snack time.,            thing
+bathroom,    🚻,      I need the bathroom.,         thing
+towel,       🧻,      I dry with a towel.,          thing
+shoes,       👟,      I put on my shoes.,           thing
+jacket,      🧥,      I wear my jacket.,            thing
+
+# ---- feelings ----
+happy,       😀,      I feel happy.,                feeling
+sad,         😢,      I feel sad.,                  feeling
+tired,       😴,      I feel tired.,                feeling
+mad,         😠,      I feel mad.,                  feeling
+calm,        😌,      I feel calm.,                 feeling
+sick,        🤒,      I feel sick.,                 feeling
+scared,      😨,      I feel scared.,               feeling
+
+# ---- greetings and manners ----
+hello,       👋,      Hello. How are you?,          greeting
+goodbye,     ✌️,      Goodbye. See you tomorrow.,   greeting
+please,      🙏,      Can I have it please?,        greeting
+thank you,   💛,      Thank you for helping.,       greeting
+sorry,       😔,      I am sorry.,                  greeting
+excuse me,   🙇,      Excuse me please.,            greeting
+
+
+# ---- PRE-PRIMER sight words (Dolch, 40) — no pictures on purpose ----
+a          , , I see a cat.                , sight pp
+and        , , You and me.                 , sight pp
+away       , , Go away bug.                , sight pp
+big        , , That is big.                , sight pp
+blue       , , The sky is blue.            , sight pp
+can        , , I can do it.                , sight pp
+come       , , Come with me.               , sight pp
+down       , , Sit down please.            , sight pp
+find       , , Can you find it?            , sight pp
+for        , , This is for you.            , sight pp
+funny      , , That is funny.              , sight pp
+go         , , It is time to go.           , sight pp
+help       , , I need help.                , sight pp
+here       , , Come over here.             , sight pp
+I          , , I am ready.                 , sight pp
+in         , , Put it in.                  , sight pp
+is         , , This is mine.               , sight pp
+it         , , I want it.                  , sight pp
+jump       , , Watch me jump.              , sight pp
+little     , , A little cat.               , sight pp
+look       , , Look at me.                 , sight pp
+make       , , Let us make it.             , sight pp
+me         , , Give it to me.              , sight pp
+my         , , That is my book.            , sight pp
+not        , , It is not here.             , sight pp
+one        , , I want one.                 , sight pp
+play       , , Let us play.                , sight pp
+red        , , The apple is red.           , sight pp
+run        , , I can run fast.             , sight pp
+said       , , She said hello.             , sight pp
+see        , , I see you.                  , sight pp
+the        , , The dog is big.             , sight pp
+three      , , I have three.               , sight pp
+to         , , I go to school.             , sight pp
+two        , , Two more please.            , sight pp
+up         , , Stand up now.               , sight pp
+we         , , We are ready.               , sight pp
+where      , , Where is it?                , sight pp
+yellow     , , The sun is yellow.          , sight pp
+you        , , How are you?                , sight pp
+
+# ---- PRIMER sight words (Dolch, 52) ----
+all        , , That is all.                , sight p
+am         , , I am happy.                 , sight p
+are        , , You are my friend.          , sight p
+at         , , Look at this.               , sight p
+ate        , , I ate my lunch.             , sight p
+be         , , Be nice please.             , sight p
+black      , , My shoes are black.         , sight p
+brown      , , The dog is brown.           , sight p
+but        , , Small but strong.           , sight p
+came       , , She came to school.         , sight p
+did        , , I did my work.              , sight p
+do         , , I can do it.                , sight p
+eat        , , I eat my snack.             , sight p
+four       , , I see four birds.           , sight p
+get        , , Get your bag.               , sight p
+good       , , You did good work.          , sight p
+have       , , I have a book.              , sight p
+he         , , He is my friend.            , sight p
+into       , , Go into the room.           , sight p
+like       , , I like pizza.               , sight p
+must       , , I must wash up.             , sight p
+new        , , I have new shoes.           , sight p
+no         , , No thank you.               , sight p
+now        , , We go now.                  , sight p
+on         , , Put it on.                  , sight p
+our        , , This is our room.           , sight p
+out        , , Let us go out.              , sight p
+please     , , Help me please.             , sight p
+pretty     , , That is pretty.             , sight p
+ran        , , I ran outside.              , sight p
+ride       , , I ride the bus.             , sight p
+saw        , , I saw a bird.               , sight p
+say        , , Say hello to me.            , sight p
+she        , , She is here.                , sight p
+so         , , I am so happy.              , sight p
+soon       , , Lunch is soon.              , sight p
+that       , , I want that one.            , sight p
+there      , , Put it over there.          , sight p
+they       , , They are my friends.        , sight p
+this       , , I like this.                , sight p
+too        , , Me too.                     , sight p
+under      , , It is under the desk.       , sight p
+want       , , I want more.                , sight p
+was        , , It was fun.                 , sight p
+well       , , I feel well.                , sight p
+went       , , We went outside.            , sight p
+what       , , What is that?               , sight p
+white      , , The paper is white.         , sight p
+who        , , Who is here?                , sight p
+will       , , I will help.                , sight p
+with       , , Come with me.               , sight p
+yes        , , Yes please.                 , sight p
+
+# ---- FIRST GRADE sight words (Dolch, 41) ----
+after      , , We walk after recess.       , sight 1
+again      , , Do it again.                , sight 1
+an         , , I want an apple.            , sight 1
+any        , , Do you have any?            , sight 1
+as         , , Big as a bus.               , sight 1
+ask        , , Ask for help.               , sight 1
+by         , , Sit by me.                  , sight 1
+could      , , I could do it.              , sight 1
+every      , , Every day we read.          , sight 1
+fly        , , Birds can fly.              , sight 1
+from       , , This is from me.            , sight 1
+give       , , Give it to me.              , sight 1
+going      , , I am going home.            , sight 1
+had        , , I had a snack.              , sight 1
+has        , , She has a book.             , sight 1
+her        , , That is her bag.            , sight 1
+him        , , Give it to him.             , sight 1
+his        , , That is his chair.          , sight 1
+how        , , How are you?                , sight 1
+just       , , I just finished.            , sight 1
+know       , , I know that word.           , sight 1
+let        , , Let me try.                 , sight 1
+live       , , I live near school.         , sight 1
+may        , , May I go?                   , sight 1
+of         , , A cup of water.             , sight 1
+old        , , My shoes are old.           , sight 1
+once       , , Read it once.               , sight 1
+open       , , Open the door.              , sight 1
+over       , , It is over there.           , sight 1
+put        , , Put it away.                , sight 1
+round      , , The ball is round.          , sight 1
+some       , , I want some more.           , sight 1
+stop       , , Please stop.                , sight 1
+take       , , Take your bag.              , sight 1
+thank      , , Thank you.                  , sight 1
+them       , , Give it to them.            , sight 1
+then       , , We eat then we play.        , sight 1
+think      , , I think it is fun.          , sight 1
+walk       , , We walk in line.            , sight 1
+were       , , We were happy.              , sight 1
+when       , , When is lunch?              , sight 1
+
+# Dolch second and third grade lists are not here on purpose — they sit above
+# where this class is reading right now. Ask and I will add them.
+`;
+</script>
 
 <script>
 /* ============================================================================
@@ -528,7 +1056,8 @@
 
 const SCHEDULE_URL = "";      // optional: a published Google Sheet CSV link
 const CALENDAR_URL = "";      // optional: same, for the school year calendar
-const LUNCH_URL    = "";      // optional: same, for the lunch menu
+const LUNCH_FILE   = "";      // not used — the menu comes from lunch.js
+const LUNCH_URL    = "";      // optional: a published Google Sheet CSV link instead
 const WORDS_URL    = "";      // optional: same, for the word list
 
 let SCHEDULE = [];            // today's activities — filled in by the loader
@@ -788,20 +1317,25 @@ function buildToday(dayIndex, date){
   });
 }
 
-let sourceLabel = '', sourceProblem = '', calendarProblem = '', wordProblem = '';
-const FILES = { 'schedule.js':false, 'calendar.js':false, 'lunch.js':false, 'words.js':false };
+let sourceLabel = '', sourceProblem = '', calendarProblem = '', wordProblem = '', lunchProblem = '', lunchNote = '';
+const FILES = { 'schedule.js':'', 'calendar.js':'', 'lunch.js':'', 'words.js':'' };
 function paintStatus(){
   const el = document.getElementById('status');
+  const page = (location.pathname.split('/').pop() || 'this page');
   const missing = Object.keys(FILES).filter(f => !FILES[f]);
-  const probs = [sourceProblem, calendarProblem, wordProblem].filter(x => x);
+  const probs = [sourceProblem, calendarProblem, wordProblem, lunchProblem].filter(x => x);
   let txt;
   if (missing.length)
     txt = 'NOT FOUND: ' + missing.join(', ') +
           '  \u2014  every file must sit in the same folder as this page';
   else
-    txt = 'reading ' + Object.keys(FILES).join(', ');
+    txt = 'lunch from lunch.js; everything else is inside this file. '
+        + 'Press the pencil to change anything.';
+  if (lunchNote) txt += '  \u00b7  ' + lunchNote;
+  if (typeof anyEdited === 'function' && anyEdited())
+    txt += '  \u00b7  edited on this device';
   if (probs.length) txt += '  \u00b7  ' + probs.join('  \u00b7  ');
-  el.textContent = txt;
+  el.textContent = page + '  \u2014  ' + txt;
   el.classList.toggle('warn', missing.length > 0 || probs.length > 0);
 }
 
@@ -823,42 +1357,50 @@ function applySchedule(text, label){
 async function fetchFirst(urls){
   for (const [url, label] of urls){
     try {
-      const res = await fetch(url, { cache: 'no-store' });
+      const bust = (url.indexOf('?') === -1 ? '?' : '&') + 't=' + Date.now();
+      const res = await fetch(url + bust, { cache: 'no-store' });
       if (res.ok) return [await res.text(), label];
     } catch(e){ /* not reachable */ }
   }
   return null;
 }
 
+/* A .csv is only used when the matching .js is missing. Otherwise editing
+   schedule.js on a hosted site would appear to do nothing, because a stale
+   schedule.csv sitting in the same folder would quietly win. A URL you set
+   yourself still takes priority over both. */
+function routes(url, csv, jsKey){
+  const served = location.protocol !== 'file:';
+  if (url) return [[url, 'a link you set']];
+  if (served && !FILES[jsKey]) return [[csv, csv]];
+  return [];
+}
+
 async function loadRemote(){
-  const sched = [];
-  if (SCHEDULE_URL) sched.push([SCHEDULE_URL, 'Google Sheet']);
-  if (location.protocol !== 'file:') sched.push(['schedule.csv', 'schedule.csv']);
-  const got = await fetchFirst(sched);
-  if (got && applySchedule(got[0], got[1])) FILES['schedule.js'] = true;
+  const got = await fetchFirst(routes(SCHEDULE_URL, 'schedule.csv', 'schedule.js'));
+  if (got && applySchedule(got[0], got[1])) FILES['schedule.js'] = got[1];
 
-  const cal = [];
-  if (CALENDAR_URL) cal.push([CALENDAR_URL, 'calendar']);
-  if (location.protocol !== 'file:') cal.push(['calendar.csv', 'calendar']);
-  const c = await fetchFirst(cal);
-  if (c){ parseSchoolCalendar(c[0]); lastDay = ''; FILES['calendar.js'] = true; }
+  const c = await fetchFirst(routes(CALENDAR_URL, 'calendar.csv', 'calendar.js'));
+  if (c){ parseSchoolCalendar(c[0]); lastDay = ''; FILES['calendar.js'] = c[1]; }
 
-  const lun = [];
-  if (LUNCH_URL) lun.push([LUNCH_URL, 'lunch']);
-  if (location.protocol !== 'file:') lun.push(['lunch.csv', 'lunch']);
-  const l = await fetchFirst(lun);
-  if (l){ parseLunch(l[0]); lastDay = ''; FILES['lunch.js'] = true; }
+  /* Lunch is different from the others: it lives in its own text file that
+     gets edited often, so lunch.txt always wins when it can be reached. */
+  const lunchTries = [];
+  if (LUNCH_URL) lunchTries.push([LUNCH_URL, 'a link you set']);
+  if (location.protocol !== 'file:' && LUNCH_FILE) lunchTries.push([LUNCH_FILE, LUNCH_FILE]);
+  const l = await fetchFirst(lunchTries);
+  if (l){
+    ORIG.lunch = l[0];
+    if (!isEdited('lunch')){ parseLunch(l[0]); lastDay = ''; }
+    FILES['lunch.js'] = l[1]; lunchProblem = '';
+  }
 
-  const wrd = [];
-  if (WORDS_URL) wrd.push([WORDS_URL, 'words']);
-  if (location.protocol !== 'file:') wrd.push(['words.csv', 'words']);
-  const w = await fetchFirst(wrd);
+  const w = await fetchFirst(routes(WORDS_URL, 'words.csv', 'words.js'));
   if (w){
     const parsed = parseWords(w[0]);
-    if (parsed.length){ ALL_WORDS = parsed; applyFocus(); lastDay = ''; FILES['words.js'] = true; }
+    if (parsed.length){ ALL_WORDS = parsed; applyFocus(); lastDay = ''; FILES['words.js'] = w[1]; }
   }
   paintStatus();
-
   tick();
 }
 
@@ -1038,10 +1580,17 @@ function tick(){
 
     renderWord(now);
 
+    lunchNote = '';
+    if (isSchoolDay(now) && !LUNCH_BY_DATE[key(now)] && LUNCH_BY_WEEKDAY[now.getDay()] === undefined){
+      const n = Object.keys(LUNCH_BY_DATE).length;
+      lunchNote = 'no menu dated ' + key(now) + ' \u2014 ' + n +
+                  (n === 1 ? ' day' : ' days') + ' in the file';
+    }
     const menu = isSchoolDay(now) ? lunchFor(now) : '';
     const lc = document.getElementById('lunchChip');
     lc.innerHTML = menu ? '<span>\u{1F37D}\u{FE0F}</span><span>' + menu + '</span>' : '';
     lc.classList.toggle('on', !!menu);
+    paintStatus();
   }
   const schoolDay = SCHEDULE.length > 0;
 
@@ -1610,6 +2159,166 @@ function loop(ts){
 }
 
 /* ============================================================================
+   7b. THE EDIT PANEL
+   Everything the board reads is plain text. This lets you change that text on
+   screen instead of opening files. Edits are kept in this browser, so they
+   survive a reload and a restart of the TV, but they belong to this device —
+   use Download (or Copy) to put a change back in the repo for everyone.
+   ============================================================================ */
+const ORIG = {};
+const KEY  = 'classboard:';
+
+function lsGet(k){ try { return localStorage.getItem(KEY + k); } catch(e){ return null; } }
+function lsSet(k, v){ try { localStorage.setItem(KEY + k, v); return true; } catch(e){ return false; } }
+function lsDel(k){ try { localStorage.removeItem(KEY + k); } catch(e){} }
+
+const TABS = [
+  { id:'schedule', label:'Schedule', file:'schedule.txt',
+    help:'One activity per line:  start , end , name , picture , note , days\u00a0\u00a0' +
+         'Leave the end blank and it runs until the next one. Days blank means every day, ' +
+         'or list them like "M, Tu, W, Th". A line starting with # is ignored.' },
+  { id:'lunch', label:'Lunch', file:'lunch.txt',
+    help:'One day per line:  2026-09-08, Chicken katsu, rice, green beans\u00a0\u00a0' +
+         'Everything after the date is the menu. Name a weekday instead of a date for meals ' +
+         'that repeat. The default line is used when nothing matches.' },
+  { id:'words', label:'Words', file:'words.txt',
+    help:'One word per line:  word , picture , sentence , group\u00a0\u00a0' +
+         'Leave the picture blank for sight words so the tile shows the word alone. ' +
+         'The word bank fills with other words from the same group.' },
+  { id:'calendar', label:'School year', file:'calendar.txt',
+    help:'no school, 2026-09-07, Labor Day\u00a0\u00a0 or a range with "to". ' +
+         'Also first day / last day, and cycle + cycle start if your school runs a rotation.' },
+  { id:'roster', label:'Class list', file:'class-list.txt',
+    help:'First names separated by commas. The board gives each student a turn as helper ' +
+         'before anyone repeats. Leave it empty to remove the helper line.' }
+];
+
+let edTab = 'schedule';
+
+function currentText(id){
+  const v = lsGet(id);
+  return v === null ? (ORIG[id] || '') : v;
+}
+function isEdited(id){ return lsGet(id) !== null; }
+function anyEdited(){ return TABS.some(t => isEdited(t.id)); }
+
+/* Push whatever the board should be reading right now into the board. */
+function applyAll(){
+  applySchedule(currentText('schedule'),
+                isEdited('schedule') ? 'your edits' : (FILES['schedule.js'] || 'built-in schedule'));
+
+  calendarProblem = '';
+  const cerr = parseSchoolCalendar(currentText('calendar'));
+  if (cerr.length) calendarProblem = 'school year: ' + cerr[0];
+
+  parseLunch(currentText('lunch'));
+
+  wordProblem = '';
+  const parsed = parseWords(currentText('words'));
+  if (parsed.length) ALL_WORDS = parsed;
+  applyFocus();
+
+  ROSTER = currentText('roster').split(',').map(x => x.trim()).filter(x => x);
+
+  lastDay = ''; stripBuilt = false;
+}
+
+/* What is wrong with this text, in plain language. */
+function checkText(id, txt){
+  if (id === 'schedule'){
+    const r = parseSchedule(txt);
+    if (!r.rows.length) return ['bad', 'No activities found.'];
+    return r.errors.length
+      ? ['bad', r.rows.length + ' activities saved. ' + r.errors.slice(0,3).join('  \u00b7  ')]
+      : ['good', r.rows.length + ' activities saved.'];
+  }
+  if (id === 'calendar'){
+    const e = parseSchoolCalendar(txt);
+    return e.length ? ['bad', e.slice(0,3).join('  \u00b7  ')]
+                    : ['good', CLOSURES.length + ' days off saved.'];
+  }
+  if (id === 'words'){
+    const w = parseWords(txt);
+    return w.length ? ['good', w.length + ' words saved.'] : ['bad', 'No words found.'];
+  }
+  if (id === 'lunch'){
+    const before = Object.keys(LUNCH_BY_DATE).length;
+    return ['good', before + ' dated menus saved.'];
+  }
+  const n = txt.split(',').map(x => x.trim()).filter(x => x).length;
+  return ['good', n + (n === 1 ? ' name saved.' : ' names saved.')];
+}
+
+function edMsg(kind, text){
+  const el = document.getElementById('edMsg');
+  el.textContent = text;
+  el.className = 'ed-msg ' + (kind || '');
+}
+
+function paintTabs(){
+  const box = document.getElementById('edTabs');
+  box.innerHTML = '';
+  TABS.forEach(t => {
+    const b = document.createElement('button');
+    b.className = 'ed-tab' + (t.id === edTab ? ' on' : '') + (isEdited(t.id) ? ' dirty' : '');
+    b.textContent = t.label;
+    b.addEventListener('click', () => { edTab = t.id; paintEditor(); });
+    box.appendChild(b);
+  });
+}
+function paintEditor(){
+  const t = TABS.find(x => x.id === edTab);
+  paintTabs();
+  document.getElementById('edHelp').textContent = t.help;
+  document.getElementById('edText').value = currentText(edTab);
+  edMsg('', isEdited(edTab) ? 'Edited on this device.' : 'Matching the file.');
+}
+
+function openEditor(){
+  document.getElementById('editor').hidden = false;
+  paintEditor();
+}
+function closeEditor(){ document.getElementById('editor').hidden = true; }
+
+document.getElementById('editBtn').addEventListener('click', openEditor);
+document.getElementById('edClose').addEventListener('click', closeEditor);
+
+document.getElementById('edSave').addEventListener('click', () => {
+  const txt = document.getElementById('edText').value;
+  const stored = lsSet(edTab, txt);
+  applyAll(); tick(); renderWord(new Date()); paintStatus(); paintTabs();
+  const [kind, note] = checkText(edTab, txt);
+  edMsg(kind, note + (stored ? '' : '  \u00b7  This browser will not keep it after a reload — use Download.'));
+});
+
+document.getElementById('edRevert').addEventListener('click', () => {
+  lsDel(edTab);
+  applyAll(); tick(); renderWord(new Date()); paintStatus(); paintEditor();
+  edMsg('good', 'Back to the file.');
+});
+
+document.getElementById('edCopy').addEventListener('click', () => {
+  const txt = document.getElementById('edText').value;
+  if (navigator.clipboard) navigator.clipboard.writeText(txt)
+    .then(() => edMsg('good', 'Copied.'))
+    .catch(() => edMsg('bad', 'Could not copy — select the text and copy it by hand.'));
+});
+
+document.getElementById('edDownload').addEventListener('click', () => {
+  const t = TABS.find(x => x.id === edTab);
+  const blob = new Blob([document.getElementById('edText').value], { type:'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = t.file;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  edMsg('good', 'Saved as ' + t.file + '.');
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !document.getElementById('editor').hidden) closeEditor();
+});
+
+/* ============================================================================
    8. START
    ============================================================================ */
 document.getElementById('fsBtn').addEventListener('click', () => {
@@ -1617,10 +2326,10 @@ document.getElementById('fsBtn').addEventListener('click', () => {
   else document.documentElement.requestFullscreen().catch(()=>{});
 });
 
-FILES['schedule.js'] = typeof window.SCHEDULE_CSV === 'string';
-FILES['calendar.js'] = typeof window.SCHOOL_CALENDAR === 'string';
-FILES['lunch.js']    = typeof window.LUNCH_MENU === 'string';
-FILES['words.js']    = typeof window.WORD_LIST === 'string';
+FILES['schedule.js'] = typeof window.SCHEDULE_CSV   === 'string' ? 'schedule.js' : '';
+FILES['calendar.js'] = typeof window.SCHOOL_CALENDAR === 'string' ? 'calendar.js' : '';
+FILES['lunch.js']    = typeof window.LUNCH_MENU      === 'string' ? 'lunch.js'    : '';
+FILES['words.js']    = typeof window.WORD_LIST       === 'string' ? 'words.js'    : '';
 
 if (typeof window.SCHOOL_CALENDAR === 'string'){
   const errs = parseSchoolCalendar(window.SCHOOL_CALENDAR);
@@ -1637,8 +2346,14 @@ if (typeof window.ROSTER === 'string')
 if (typeof window.HELPER_LABEL === 'string' && window.HELPER_LABEL.trim())
   HELPER_LABEL = window.HELPER_LABEL.trim();
 
-applySchedule(typeof window.SCHEDULE_CSV === 'string' ? window.SCHEDULE_CSV : BUILT_IN,
-              typeof window.SCHEDULE_CSV === 'string' ? 'schedule.js' : 'built-in schedule');
+ORIG.schedule = typeof window.SCHEDULE_CSV   === 'string' ? window.SCHEDULE_CSV   : BUILT_IN;
+ORIG.calendar = typeof window.SCHOOL_CALENDAR === 'string' ? window.SCHOOL_CALENDAR : '';
+ORIG.lunch    = typeof window.LUNCH_MENU      === 'string' ? window.LUNCH_MENU      : '';
+if (typeof window.LUNCH_MENU !== 'string')
+  lunchProblem = 'lunch.js not found — put it in the same folder as this page';
+ORIG.words    = typeof window.WORD_LIST       === 'string' ? window.WORD_LIST       : BUILT_IN_WORDS;
+ORIG.roster   = typeof window.ROSTER          === 'string' ? window.ROSTER          : '';
+applyAll();
 document.getElementById('lunchChip').addEventListener('click', openLunch);
 document.getElementById('lunchModal').addEventListener('click', closeLunch);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLunch(); });
