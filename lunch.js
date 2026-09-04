@@ -23,12 +23,18 @@
 
 window.LUNCH_MENU = `
 # ---- this week ----
-2026-09-08, Pasta Florentine, Chicken Ceasar Salad, Green Salad, Diced Tomatoes, Cucumbers, Orange Wedge
-2026-09-09, Chili Cheese Nachos, Bean Volcano Bowl, Green Salad, Local Salsa, Refried Beans, Strawberry Kiwi Juice
-2026-09-10, Hot Dog w/ Bun, Chinese Chicken Salad, Tater Tots, Roasted Kabocha, Cucumber, Apple Wedges
-2026-09-11, Kalua Pork Sandwich, Pasta Salad, Baby Carrots, Cucumber, Sweet Potato Mash, Apple Blueberry Crunch
+2026-08-31, Chicken katsu, rice, green beans, pineapple
+2026-09-01, Beef stew, brown rice, tossed salad, orange
+2026-09-02, Shoyu chicken, rice, corn, apple
+2026-09-03, Spaghetti, garlic bread, carrots, fruit cup
+2026-09-04, Cheese pizza, salad, watermelon
 
-
+# ---- if your menu is the same every week, use these instead ----
+# Monday,    Chicken katsu, rice, green beans, fruit
+# Tuesday,   Beef stew, rice, salad, fruit
+# Wednesday, Shoyu chicken, rice, corn, fruit
+# Thursday,  Spaghetti, garlic bread, carrots, fruit
+# Friday,    Cheese pizza, salad, fruit
 
 default, Check the cafeteria menu
 `;

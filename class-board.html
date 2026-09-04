@@ -81,6 +81,9 @@
   }
   .lunchchip span:last-child{overflow:hidden;text-overflow:ellipsis}
   .lunchchip.on{display:flex}
+  .lunchchip{border:none;cursor:pointer;font-family:inherit}
+  .lunchchip:hover{background:#E2E7EA}
+  .lunchchip:focus-visible{outline:.16rem solid var(--teal);outline-offset:.12rem}
   .rightzone{display:flex;flex-direction:column;align-items:flex-end;gap:.05rem;min-width:0;overflow:hidden}
   .helper{
     font-size:.95rem;font-weight:700;color:var(--muted);white-space:nowrap;
@@ -246,6 +249,10 @@
   .bword .b-pic img{width:2.1rem;height:2.1rem;object-fit:contain}
   .bword:active{transform:translateY(.16rem);box-shadow:0 .04rem 0 #CBD2D8}
   .bword:focus-visible{outline:.18rem solid var(--teal);outline-offset:.12rem}
+  .bword.textonly{font-size:1.85rem;letter-spacing:.005em}
+  .wordcard.nopic .w-word{font-size:4.6rem}
+  .wordcard.nopic{justify-content:center;text-align:center}
+  .wordcard.nopic .w-sent{text-align:center}
   .bword.right{background:var(--teal-soft);box-shadow:0 .2rem 0 var(--teal)}
   .bword.miss{background:#E3E6E8;opacity:.5}
   .bword.hint{box-shadow:0 0 0 .18rem var(--teal), 0 .2rem 0 #CBD2D8}
@@ -309,6 +316,7 @@
     font-family:'Fredoka',sans-serif;font-weight:500;font-size:.92rem;line-height:1.1;
     color:var(--ink);overflow-wrap:break-word;hyphens:auto;
   }
+  .slot.tappable{cursor:pointer}
   .slot.done .s-time,.slot.done .s-icon,.slot.done .s-name{opacity:.3}
   .slot.done::after{
     content:"\2713";position:absolute;top:1.55rem;left:50%;margin-left:.5rem;
@@ -320,14 +328,45 @@
   .slot.next{background:var(--panel-2)}
 
   /* ================= chrome ================= */
+  .modal{
+    position:fixed;inset:0;z-index:20;
+    background:rgba(16,26,36,.74);
+    display:flex;align-items:center;justify-content:center;
+    padding:5vh 5vw;cursor:pointer;
+  }
+  .modal[hidden]{display:none}
+  .modal-card{
+    background:var(--panel);border-radius:1.2rem;
+    border-bottom:.3rem solid var(--paper-edge);
+    padding:1.4rem 2.6rem 1.1rem;text-align:center;
+    max-width:min(52rem,92vw);max-height:88vh;overflow:auto;
+    box-shadow:0 1.2rem 3rem rgba(0,0,0,.45);
+  }
+  .modal-icon{font-size:4.2rem;line-height:1;display:block}
+  .modal-title{
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:2.6rem;
+    margin:.15em 0 .5em;color:var(--ink);
+  }
+  .modal-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr;gap:.45rem}
+  .modal-list.two{grid-template-columns:1fr 1fr;gap:.4rem .55rem}
+  .modal-list.dense li{font-size:1.65rem}
+  .modal-list li{
+    font-family:'Fredoka',sans-serif;font-weight:500;font-size:2.15rem;line-height:1.15;
+    color:var(--ink);background:var(--panel-2);border-radius:.6rem;padding:.35em .7em;
+  }
+  .modal-hint{display:block;margin-top:1rem;font-size:1rem;font-weight:700;color:var(--muted)}
+
   .status{
     position:fixed;left:.6rem;bottom:.35rem;z-index:9;
     font-size:.62rem;font-weight:700;color:rgba(255,255,255,.55);
     opacity:.28;transition:opacity .15s ease;pointer-events:none;
-    max-width:60vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    max-width:80vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   body:hover .status{opacity:.75}
-  .status.warn{color:#F0C46A;opacity:1}
+  .status.warn{
+    color:#2A1D06;background:#F0C46A;opacity:1;
+    font-size:.85rem;padding:.3em .8em;border-radius:.4rem;
+  }
 
   .fs{
     position:fixed;top:.4rem;right:.5rem;z-index:9;
@@ -362,6 +401,15 @@
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5v2H6v3H4zm11-5h5v5h-2V6h-3V4zM4 15h2v3h3v2H4v-5zm14 0h2v5h-5v-2h3v-3z"/></svg>
 </button>
 
+<div class="modal" id="lunchModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="lunchTitle">
+    <span class="modal-icon" aria-hidden="true">🍽️</span>
+    <h2 class="modal-title" id="lunchTitle">Lunch today</h2>
+    <ul class="modal-list" id="lunchList"></ul>
+    <span class="modal-hint">Tap anywhere to close</span>
+  </div>
+</div>
+
 <div class="status" id="status"></div>
 
 <div class="board">
@@ -375,7 +423,7 @@
     </div>
     <div class="chiprow">
       <div class="special" id="special"></div>
-      <div class="lunchchip" id="lunchChip"></div>
+      <button class="lunchchip" id="lunchChip" aria-haspopup="dialog"></button>
     </div>
     <div class="rightzone">
       <div class="helper" id="helper"></div>
@@ -486,21 +534,12 @@ const WORDS_URL    = "";      // optional: same, for the word list
 let SCHEDULE = [];            // today's activities — filled in by the loader
 let RAW_ROWS = [];
 
+/* Used ONLY when schedule.js cannot be found. It deliberately says so rather
+   than showing a plausible-looking schedule, because a silent fallback is
+   impossible to spot from across the room. */
 const BUILT_IN = `
-start,  end,    name,         icon, detail,                        days
-8:00,   8:20,   Arrival,      \u{1F392},   Bags away say hello,
-8:20,   9:00,   Meeting,      \u{1F44B},   Calendar and weather,
-9:00,   9:30,   Reading,      \u{1F4D6},   ,
-9:30,   9:45,   Break,        \u{1F9E9},   Sensory area,
-9:45,   10:45,  Math,         \u{1F522},   ,
-10:45,  11:05,  Snack,        \u{1F34E},   Snack and bathroom,
-11:05,  11:40,  Writing,      \u{270F}\u{FE0F},   ,
-11:40,  12:15,  Lunch,        \u{1F37D}\u{FE0F},   ,
-12:15,  12:45,  Recess,       \u{26BD},   Outside,
-12:45,  1:30,   Life skills,  \u{1F9FA},   "Cooking, laundry, hygiene",
-1:30,   1:45,   Break,        \u{1F9E9},   Sensory area,
-1:45,   2:25,   Work skills,  \u{1F9F0},   Job tasks,
-2:25,   2:50,   Pack up,      \u{1F44B},   Bags jobs goodbye,
+start, end,   name,              picture, note
+8:00,  3:00,  No schedule file,  \u26A0\uFE0F,  schedule.js is not in the same folder as this page
 `;
 
 /* How many seconds before the end of an activity to give a warning.
@@ -711,8 +750,18 @@ function parseSchedule(text){
       end = parseTime(c[1]);
       if (end === null) errors.push('Line ' + (i+1) + ': can\u2019t read the end time \u201c' + c[1] + '\u201d');
     }
+    /* Everything from column six on is days and/or a block label. An unquoted
+       "M, Tu, W, Th" arrives as four separate cells, so gather any cell that
+       reads as weekday names into the day list and take the first that does
+       not as the block. Avoid naming a block M, Tu, W, Th, F or Sa. */
+    let dayText = '', block = '';
+    c.slice(5).forEach(cell => {
+      if (!cell) return;
+      if (parseDays(cell)) dayText += (dayText ? ',' : '') + cell;
+      else if (!block) block = cell;
+    });
     rows.push({ start, end, name, icon: c[3] || '', detail: c[4] || '',
-                days: parseDays(c[5]), block: (c[6] || '').trim().toLowerCase() });
+                days: parseDays(dayText), block: block.trim().toLowerCase() });
   });
   return { rows, errors };
 }
@@ -739,12 +788,21 @@ function buildToday(dayIndex, date){
   });
 }
 
-let sourceLabel = '', sourceProblem = '', calendarProblem = '';
+let sourceLabel = '', sourceProblem = '', calendarProblem = '', wordProblem = '';
+const FILES = { 'schedule.js':false, 'calendar.js':false, 'lunch.js':false, 'words.js':false };
 function paintStatus(){
   const el = document.getElementById('status');
-  const p = [sourceProblem, calendarProblem].filter(x => x).join('  \u00b7  ');
-  el.textContent = p ? sourceLabel + ' \u2014 ' + p : sourceLabel;
-  el.classList.toggle('warn', !!p);
+  const missing = Object.keys(FILES).filter(f => !FILES[f]);
+  const probs = [sourceProblem, calendarProblem, wordProblem].filter(x => x);
+  let txt;
+  if (missing.length)
+    txt = 'NOT FOUND: ' + missing.join(', ') +
+          '  \u2014  every file must sit in the same folder as this page';
+  else
+    txt = 'reading ' + Object.keys(FILES).join(', ');
+  if (probs.length) txt += '  \u00b7  ' + probs.join('  \u00b7  ');
+  el.textContent = txt;
+  el.classList.toggle('warn', missing.length > 0 || probs.length > 0);
 }
 
 function applySchedule(text, label){
@@ -777,25 +835,29 @@ async function loadRemote(){
   if (SCHEDULE_URL) sched.push([SCHEDULE_URL, 'Google Sheet']);
   if (location.protocol !== 'file:') sched.push(['schedule.csv', 'schedule.csv']);
   const got = await fetchFirst(sched);
-  if (got && applySchedule(got[0], got[1])) { /* applied */ }
+  if (got && applySchedule(got[0], got[1])) FILES['schedule.js'] = true;
 
   const cal = [];
   if (CALENDAR_URL) cal.push([CALENDAR_URL, 'calendar']);
   if (location.protocol !== 'file:') cal.push(['calendar.csv', 'calendar']);
   const c = await fetchFirst(cal);
-  if (c){ parseSchoolCalendar(c[0]); lastDay = ''; }
+  if (c){ parseSchoolCalendar(c[0]); lastDay = ''; FILES['calendar.js'] = true; }
 
   const lun = [];
   if (LUNCH_URL) lun.push([LUNCH_URL, 'lunch']);
   if (location.protocol !== 'file:') lun.push(['lunch.csv', 'lunch']);
   const l = await fetchFirst(lun);
-  if (l){ parseLunch(l[0]); lastDay = ''; }
+  if (l){ parseLunch(l[0]); lastDay = ''; FILES['lunch.js'] = true; }
 
   const wrd = [];
   if (WORDS_URL) wrd.push([WORDS_URL, 'words']);
   if (location.protocol !== 'file:') wrd.push(['words.csv', 'words']);
   const w = await fetchFirst(wrd);
-  if (w){ const parsed = parseWords(w[0]); if (parsed.length){ WORDS = parsed; lastDay = ''; } }
+  if (w){
+    const parsed = parseWords(w[0]);
+    if (parsed.length){ ALL_WORDS = parsed; applyFocus(); lastDay = ''; FILES['words.js'] = true; }
+  }
+  paintStatus();
 
   tick();
 }
@@ -949,6 +1011,7 @@ function buildStrip(){
     setIcon(ic, icon);
     const nm = document.createElement('span'); nm.className = 's-name'; nm.textContent = name;
     s.append(tm, ic, nm);
+    if (/lunch/i.test(name)){ s.classList.add('tappable'); s.addEventListener('click', openLunch); }
     strip.appendChild(s);
   });
   stripBuilt = true;
@@ -991,7 +1054,7 @@ function tick(){
   if (!stripBuilt) buildStrip();
 
   // which activity
-  let cur = -1;
+  let cur = -1, gapNext = -1;
   for (let i = 0; i < SCHEDULE.length; i++){
     if (nowT >= SCHEDULE[i][0] && nowT < SCHEDULE[i][1]){ cur = i; break; }
   }
@@ -1024,12 +1087,25 @@ function tick(){
     show('now', SCHEDULE[0], 'Soon', 'Starts at ' + fmt(SCHEDULE[0][0]) + ' ' + ampm(SCHEDULE[0][0]));
     show('then', SCHEDULE[1]);
     timer.classList.add('hide');
-  } else if (afterSchool || cur === -1){
+  } else if (afterSchool){
     show('now', null, 'Today');
     document.getElementById('nowName').textContent = 'All done';
     document.getElementById('nowDetail').textContent = 'See you tomorrow';
     setIcon(document.getElementById('nowIcon'), "\u{2B50}");
     thenCard.parentNode.classList.add('solo');
+    timer.classList.add('hide');
+  } else if (cur === -1){
+    // sitting in a gap between two activities: show what is coming, not "all done"
+    gapNext = SCHEDULE.findIndex(x => x[0] > nowT);
+    const up = SCHEDULE[gapNext];
+    thenCard.parentNode.classList.remove('solo');
+    show('now', up, 'Next', 'Starts at ' + fmt(up[0]) + ' ' + ampm(up[0]));
+    if (gapNext + 1 < SCHEDULE.length) show('then', SCHEDULE[gapNext + 1]);
+    else {
+      document.getElementById('thenName').textContent = 'Go home';
+      document.getElementById('thenDetail').textContent = '';
+      setIcon(document.getElementById('thenIcon'), "\u{1F3E1}");
+    }
     timer.classList.add('hide');
   } else {
     thenCard.parentNode.classList.remove('solo');
@@ -1077,7 +1153,7 @@ function tick(){
     el.className = 'slot';
     if (!schoolDay) return;
     if (i === cur) el.classList.add('now');
-    else if (i === cur + 1 || (cur === -1 && beforeSchool && i === 0)) el.classList.add('next');
+    else if (i === (cur >= 0 ? cur + 1 : (beforeSchool ? 0 : gapNext))) el.classList.add('next');
     else if (nowT >= SCHEDULE[i][1]) el.classList.add('done');
   });
 }
@@ -1085,7 +1161,7 @@ function tick(){
 /* ============================================================================
    4b. WORD OF THE DAY
    ============================================================================ */
-let WORDS = [], BANK_SIZE = 6, wordToday = null, bankSolved = false, practiceSeed = 0;
+let WORDS = [], ALL_WORDS = [], WORD_FOCUS = [], BANK_SIZE = 6, wordToday = null, bankSolved = false, practiceSeed = 0;
 
 const BUILT_IN_WORDS = `
 word, picture, sentence, group
@@ -1104,7 +1180,7 @@ function parseWords(text){
     if (!c.join('').trim() || c[0].charAt(0) === '#') return;
     if (/^word$/i.test(c[0])) return;
     if (!c[0]) return;
-    out.push({ word: c[0], icon: c[1] || '\u2B50', sentence: c[2] || '', group: (c[3] || 'all').toLowerCase() });
+    out.push({ word: c[0], icon: c[1] || '', sentence: c[2] || '', group: (c[3] || 'all').toLowerCase() });
   });
   return out;
 }
@@ -1125,7 +1201,7 @@ function wordFor(d){
 function buildBank(target, seed){
   const size = Math.max(2, Math.min(8, BANK_SIZE));
   const same = WORDS.filter(w => w.group === target.group && w.word !== target.word);
-  const rest = WORDS.filter(w => w.group !== target.group);
+  const rest = WORDS.filter(w => w.group !== target.group && w.word !== target.word);
   const pool = shuffled(same, seed).concat(shuffled(rest, seed + 7));
   const picked = [target].concat(pool.slice(0, size - 1));
   return shuffled(picked, seed + 13);
@@ -1154,11 +1230,14 @@ function renderWord(d){
   const bank = document.getElementById('bank');
   if (!w){ bank.innerHTML = ''; return; }
 
-  setPic(document.getElementById('wIcon'), w.icon);
+  const wIcon = document.getElementById('wIcon');
+  wIcon.hidden = !w.icon;
+  if (w.icon) setPic(wIcon, w.icon);
+  document.getElementById('wordCard').classList.toggle('nopic', !w.icon);
   document.getElementById('wWord').textContent = w.word;
   document.getElementById('wSent').textContent = w.sentence;
   const prompt = document.getElementById('wPrompt');
-  prompt.textContent = 'Find ' + w.word + '.';
+  prompt.textContent = 'Find \u201C' + w.word + '\u201D.';
   prompt.classList.remove('good');
 
   const seed = Math.abs(hashStr(w.word)) + practiceSeed;
@@ -1167,14 +1246,26 @@ function renderWord(d){
   bank.innerHTML = '';
   list.forEach(item => {
     const b = document.createElement('button');
-    b.className = 'bword';
-    const pic = document.createElement('span'); pic.className = 'b-pic';
-    pic.setAttribute('aria-hidden','true'); setPic(pic, item.icon);
+    b.className = 'bword' + (item.icon ? '' : ' textonly');
+    if (item.icon){
+      const pic = document.createElement('span'); pic.className = 'b-pic';
+      pic.setAttribute('aria-hidden','true'); setPic(pic, item.icon);
+      b.appendChild(pic);
+    }
     const lab = document.createElement('span'); lab.textContent = item.word;
-    b.append(pic, lab);
+    b.appendChild(lab);
     b.addEventListener('click', () => pickWord(item, b));
     bank.appendChild(b);
   });
+}
+
+/* WORD_FOCUS narrows the rotation to certain groups. Unknown group names are
+   ignored rather than emptying the list. */
+function applyFocus(){
+  if (!WORD_FOCUS.length){ WORDS = ALL_WORDS.slice(); return; }
+  const picked = ALL_WORDS.filter(w => WORD_FOCUS.indexOf(w.group) !== -1);
+  WORDS = picked.length ? picked : ALL_WORDS.slice();
+  if (!picked.length) wordProblem = 'words.js: WORD_FOCUS matched no groups, using them all';
 }
 
 function hashStr(s){
@@ -1202,6 +1293,32 @@ function pickWord(item, btn){
       if (x.querySelector('span:last-child').textContent === wordToday.word) x.classList.add('hint');
     });
   }
+}
+
+/* the lunch menu, opened out big enough to read from the back of the room */
+let lunchTimer = null;
+function openLunch(){
+  const d = new Date();
+  const menu = isSchoolDay(d) ? lunchFor(d) : '';
+  if (!menu) return;
+  const ul = document.getElementById('lunchList');
+  ul.innerHTML = '';
+  menu.split(',').map(x => x.trim()).filter(x => x).forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = item;
+    ul.appendChild(li);
+  });
+  const n = ul.children.length;
+  ul.classList.toggle('two', n > 5);
+  ul.classList.toggle('dense', n > 5);
+  document.getElementById('lunchModal').hidden = false;
+  speak('Lunch today. ' + menu);
+  clearTimeout(lunchTimer);
+  lunchTimer = setTimeout(closeLunch, 30000);   // closes itself if nobody does
+}
+function closeLunch(){
+  document.getElementById('lunchModal').hidden = true;
+  clearTimeout(lunchTimer);
 }
 
 /* tabs */
@@ -1500,13 +1617,21 @@ document.getElementById('fsBtn').addEventListener('click', () => {
   else document.documentElement.requestFullscreen().catch(()=>{});
 });
 
+FILES['schedule.js'] = typeof window.SCHEDULE_CSV === 'string';
+FILES['calendar.js'] = typeof window.SCHOOL_CALENDAR === 'string';
+FILES['lunch.js']    = typeof window.LUNCH_MENU === 'string';
+FILES['words.js']    = typeof window.WORD_LIST === 'string';
+
 if (typeof window.SCHOOL_CALENDAR === 'string'){
   const errs = parseSchoolCalendar(window.SCHOOL_CALENDAR);
   if (errs.length) calendarProblem = 'calendar.js: ' + errs[0];
 }
 if (typeof window.LUNCH_MENU === 'string') parseLunch(window.LUNCH_MENU);
-WORDS = parseWords(typeof window.WORD_LIST === 'string' ? window.WORD_LIST : BUILT_IN_WORDS);
+ALL_WORDS = parseWords(typeof window.WORD_LIST === 'string' ? window.WORD_LIST : BUILT_IN_WORDS);
 if (typeof window.WORD_BANK_SIZE === 'number') BANK_SIZE = window.WORD_BANK_SIZE;
+if (typeof window.WORD_FOCUS === 'string')
+  WORD_FOCUS = window.WORD_FOCUS.split(',').map(x => x.trim().toLowerCase()).filter(x => x);
+applyFocus();
 if (typeof window.ROSTER === 'string')
   ROSTER = window.ROSTER.split(',').map(x => x.trim()).filter(x => x);
 if (typeof window.HELPER_LABEL === 'string' && window.HELPER_LABEL.trim())
@@ -1514,8 +1639,18 @@ if (typeof window.HELPER_LABEL === 'string' && window.HELPER_LABEL.trim())
 
 applySchedule(typeof window.SCHEDULE_CSV === 'string' ? window.SCHEDULE_CSV : BUILT_IN,
               typeof window.SCHEDULE_CSV === 'string' ? 'schedule.js' : 'built-in schedule');
+document.getElementById('lunchChip').addEventListener('click', openLunch);
+document.getElementById('lunchModal').addEventListener('click', closeLunch);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLunch(); });
+
 document.getElementById('tabWeather').addEventListener('click', () => showView('weather'));
 document.getElementById('tabWord').addEventListener('click', () => showView('word'));
+['nowCard','thenCard'].forEach(id => {
+  document.getElementById(id).addEventListener('click', () => {
+    const nm = document.getElementById(id === 'nowCard' ? 'nowName' : 'thenName').textContent;
+    if (/lunch/i.test(nm)) openLunch();
+  });
+});
 document.getElementById('wordCard').addEventListener('click', () => {
   if (wordToday) speak(wordToday.word + '. ' + wordToday.sentence);
 });
