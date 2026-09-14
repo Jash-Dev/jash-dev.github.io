@@ -39,11 +39,11 @@ window.LUNCH_MENU = `
 
 
 # ---- next week goes here ----
-# 2026-09-14,
-# 2026-09-15,
-# 2026-09-16,
-# 2026-09-17,
-# 2026-09-18,
+# 2026-09-14, Cheese Pizza, Protein Pack, Baby Carrots, Cucumbers, Orange Wedges
+# 2026-09-15, Orange Chicken, Hapa Rice, Chinese Chicken Salad, Steamed Bok Choy, Pinapple Chunks, Fortune Cookie
+# 2026-09-16, Paniola Pasta, Chicken Ceasar Salad, Green Salad, Baby Carrots, Orange Wedges
+# 2026-09-17, Teri Burger, Chef Salad, Lettuce & Tomato, Baby Carrots, Crinkle Fries, Sour Raisin Tropical Punch
+# 2026-09-18, Roast Turkey w/ Gravy, WG Roll, Banh Mi Salad w/ Meat Balls, Mashed Potatoes, Roasted Zuchini, Apple Wedges
 
 
 # ---- used when no line above matches today ----
