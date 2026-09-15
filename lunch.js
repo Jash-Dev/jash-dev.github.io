@@ -30,15 +30,7 @@
 
 window.LUNCH_MENU = `
 
-# ---- week of September 7 ----
-2026-09-04, Wagyu Steak
-2026-09-08, Pasta Florentine, Chicken Caesar Salad, Green Salad, Diced Tomatoes, Cucumbers, Orange Wedge
-2026-09-09, Chili Cheese Nachos, Bean Volcano Bowl, Green Salad, Local Salsa, Refried Beans, Strawberry Kiwi Juice
-2026-09-10, Hot Dog w/ Bun, Chinese Chicken Salad, Tater Tots, Roasted Kabocha
-2026-09-11, Kalua Pork Sandwich, Pasta Salad, Baby Carrots, Cucumber, Sweet Potato Mash, Apple Blueberry Crunch
-
-
-# ---- next week goes here ----
+#--- this week
  2026-09-14, Cheese Pizza, Protein Pack, Baby Carrots, Cucumbers, Orange Wedges
  2026-09-15, Orange Chicken, Hapa Rice, Chinese Chicken Salad, Steamed Bok Choy, Pinapple Chunks, Fortune Cookie
  2026-09-16, Paniola Pasta, Chicken Ceasar Salad, Green Salad, Baby Carrots, Orange Wedges
