@@ -1,0 +1,2379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1D2E3D;
+    --panel:#FAF8F4;
+    --panel-2:#EDE8DF;
+    --ink:#17222D;
+    --muted:#6B7A88;
+    --line:#DAD3C7;
+    --teal:#2E8B80;
+    --teal-soft:#D8EDE9;
+    --amber:#DDA02B;
+    --amber-soft:#FBEBCB;
+    --coral:#D3654A;
+    --coral-soft:#F8DED6;
+    --r:1rem;
+  }
+
+  html{ font-size:clamp(13px, 0.6vw + 1.0vh, 26px); }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+
+  body{
+    font-family:'Nunito','Trebuchet MS','Segoe UI',sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    overflow:hidden;              /* never scrolls */
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .board{
+    height:100dvh;
+    display:grid;
+    grid-template-rows:auto minmax(0,1fr) auto;
+    gap:.7rem;
+    padding:2.5vh 2.2vw;          /* keeps clear of TV overscan */
+  }
+
+  /* ================= top bar ================= */
+  .topbar{
+    display:grid;
+    grid-template-columns:minmax(0,auto) minmax(0,1fr) minmax(0,auto);
+    align-items:center;
+    gap:1rem;
+    background:var(--panel);
+    border-radius:var(--r);
+    padding:.6rem 1.3rem;
+  }
+  .date-block{display:flex;align-items:baseline;gap:.7rem;min-width:0;overflow:hidden}
+  .lead{font-size:1.05rem;font-weight:700;color:var(--muted);white-space:nowrap}
+  .weekday{
+    font-family:'Fredoka',sans-serif;font-weight:600;
+    font-size:3.1rem;line-height:1;color:var(--ink);white-space:nowrap;
+  }
+  .datenum{font-size:1.5rem;font-weight:700;color:var(--muted);white-space:nowrap;
+    min-width:0;overflow:hidden;text-overflow:ellipsis}
+
+  .chiprow{
+    justify-self:stretch;display:flex;align-items:center;justify-content:center;
+    flex-wrap:wrap;gap:.4rem .5rem;min-width:0;
+  }
+  .daytype{
+    display:none;font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.15rem;
+    background:#E2E9ED;color:#3B4B58;padding:.18em .7em;border-radius:.45rem;white-space:nowrap;
+  }
+  .daytype.on{display:inline-block}
+  .lunchchip{
+    display:none;align-items:center;gap:.45rem;flex:0 1 auto;
+    background:#EDF0F2;color:#3B4B58;font-weight:700;font-size:1.05rem;
+    padding:.3em .9em;border-radius:.7rem;
+    min-width:0;max-width:34ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .lunchchip span:last-child{overflow:hidden;text-overflow:ellipsis}
+  .lunchchip.on{display:flex}
+  .lunchchip{border:none;cursor:pointer;font-family:inherit}
+  .lunchchip:hover{background:#E2E7EA}
+  .lunchchip:focus-visible{outline:.16rem solid var(--teal);outline-offset:.12rem}
+  .rightzone{display:flex;flex-direction:column;align-items:flex-end;gap:.05rem;min-width:0;overflow:hidden}
+  .helper{
+    font-size:.95rem;font-weight:700;color:var(--muted);white-space:nowrap;
+    display:none;align-items:baseline;gap:.4em;
+  }
+  .helper.on{display:flex}
+  .helper b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.3rem;color:var(--ink)}
+
+  .special{
+    display:none;
+    align-items:center;
+    gap:.5rem;
+    background:var(--chip,#E5E9EC);
+    color:var(--chipink,#17222D);
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:1.15rem;
+    padding:.3em 1em;
+    border-radius:.7rem;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    flex:0 1 auto;min-width:0;
+  }
+  .special.on{display:flex}
+  .special span:last-child{overflow:hidden;text-overflow:ellipsis}
+
+  .clock{
+    font-family:'Fredoka',sans-serif;font-weight:500;
+    font-size:2.05rem;line-height:1;color:var(--muted);white-space:nowrap;
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* ================= middle ================= */
+  .middle{
+    display:grid;
+    grid-template-columns:1.08fr 1fr;
+    gap:.7rem;
+    min-height:0;
+  }
+
+  /* ---- first / then ---- */
+  .firstthen{display:grid;grid-template-rows:1.42fr 1fr;gap:.7rem;min-height:0}
+  .firstthen.solo{grid-template-rows:1fr}
+  .firstthen.solo .ft-then{display:none}
+
+  .ft{
+    background:var(--panel);
+    border-radius:var(--r);
+    padding:.7rem 1.2rem .9rem;
+    display:grid;
+    grid-template-rows:auto minmax(0,1fr) auto;
+    min-height:0;
+    overflow:hidden;
+  }
+  .ft-label{
+    font-family:'Fredoka',sans-serif;font-weight:600;
+    font-size:1.35rem;color:var(--muted);line-height:1.1;
+  }
+  .ft-body{
+    display:flex;align-items:center;gap:1.1rem;min-height:0;
+  }
+  .ft-icon{
+    font-size:4.6rem;line-height:1;flex:0 0 auto;
+    width:1.35em;height:1.35em;border-radius:1rem;
+    background:var(--panel-2);
+    display:grid;place-items:center;
+  }
+  .ft-icon img{width:78%;height:78%;object-fit:contain}
+  .ft-text{min-width:0}
+  .ft-name{
+    display:block;
+    font-family:'Fredoka',sans-serif;font-weight:600;
+    font-size:4.2rem;line-height:1.02;color:var(--ink);
+    overflow-wrap:break-word;
+  }
+  .ft-detail{display:block;font-size:1.25rem;font-weight:600;color:var(--muted);margin-top:.2em}
+
+  .ft-now .ft-icon{font-size:5.8rem}
+  .ft-then .ft-icon{font-size:4rem}
+  .ft-then .ft-name{font-size:2.9rem}
+  .ft-then .ft-detail{font-size:1.1rem}
+
+  /* timer */
+  .timer{margin-top:.5rem}
+  .track{
+    height:1.1rem;border-radius:999px;background:var(--panel-2);overflow:hidden;
+  }
+  .track i{
+    display:block;height:100%;width:0%;border-radius:999px;
+    background:var(--teal);
+    transition:width 1s linear, background-color .4s ease;
+  }
+  .left{
+    margin-top:.3rem;font-size:1.3rem;font-weight:800;color:var(--muted);
+    font-variant-numeric:tabular-nums;
+  }
+  .timer.hide{visibility:hidden}
+
+  .ft-now.p2{background:var(--amber-soft)}
+  .ft-now.p2 .track i{background:var(--amber)}
+  .ft-now.p2 .left{color:#8A6210}
+  .ft-now.p1{background:var(--amber-soft)}
+  .ft-now.p1 .track i{background:var(--amber)}
+  .ft-now.p1 .left{color:#8A6210}
+  .ft-now.p30{background:var(--coral-soft)}
+  .ft-now.p30 .track i{background:var(--coral)}
+  .ft-now.p30 .left{color:#8E3421}
+
+  /* ---- right panel: weather + word ---- */
+  .side{
+    background:var(--panel);border-radius:var(--r);
+    padding:.7rem .9rem .9rem;
+    display:flex;flex-direction:column;gap:.6rem;min-height:0;
+  }
+  .panel-head{display:flex;align-items:center;justify-content:space-between;gap:.7rem;flex:0 0 auto}
+  .headtools{display:flex;align-items:center;gap:.4rem}
+  .tabs{display:flex;gap:.35rem}
+  .tab{
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.45rem;
+    background:transparent;border:none;cursor:pointer;color:var(--muted);
+    padding:.15em .75em;border-radius:.6rem;
+  }
+  .tab.on{background:var(--teal-soft);color:#1D6259}
+  .tab:focus-visible{outline:.16rem solid var(--teal);outline-offset:.1rem}
+
+  .view{display:flex;flex-direction:column;gap:.6rem;flex:1 1 auto;min-height:0}
+  .view[hidden]{display:none}
+
+  /* word of the day */
+  .wordcard{
+    flex:1 1 auto;min-height:0;border-radius:.7rem;background:var(--panel-2);
+    display:flex;align-items:center;justify-content:center;gap:1.1rem;
+    padding:.6rem 1rem;cursor:pointer;text-align:left;
+  }
+  .wordcard:active{background:#E5DFD4}
+  .w-icon{font-size:4.6rem;line-height:1}
+  .w-icon img{width:1.2em;height:1.2em;object-fit:contain}
+  .w-word{
+    display:block;font-family:'Fredoka',sans-serif;font-weight:600;
+    font-size:3.4rem;line-height:1.02;color:var(--ink);
+  }
+  .w-sent{display:block;font-size:1.3rem;font-weight:700;color:var(--muted);margin-top:.15em}
+  .w-prompt{
+    margin:0;text-align:center;font-family:'Fredoka',sans-serif;font-weight:600;
+    font-size:1.35rem;color:var(--muted);flex:0 0 auto;
+  }
+  .w-prompt.good{color:#1D6259}
+
+  .bank{
+    display:grid;grid-template-columns:repeat(var(--cols,3),1fr);
+    gap:.45rem;flex:0 0 auto;
+  }
+  .bword{
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.15rem;color:var(--ink);
+    background:#EDEFF1;border:none;border-radius:.7rem;cursor:pointer;
+    padding:.5rem .2rem .45rem;min-height:4.4rem;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.1rem;
+    box-shadow:0 .2rem 0 #CBD2D8;
+    transition:transform .09s ease, box-shadow .09s ease, background-color .2s ease;
+  }
+  .bword .b-pic{font-size:2.1rem;line-height:1.1}
+  .bword .b-pic img{width:2.1rem;height:2.1rem;object-fit:contain}
+  .bword:active{transform:translateY(.16rem);box-shadow:0 .04rem 0 #CBD2D8}
+  .bword:focus-visible{outline:.18rem solid var(--teal);outline-offset:.12rem}
+  .bword.textonly{font-size:1.85rem;letter-spacing:.005em}
+  .wordcard.nopic .w-word{font-size:4.6rem}
+  .wordcard.nopic{justify-content:center;text-align:center}
+  .wordcard.nopic .w-sent{text-align:center}
+  .bword.right{background:var(--teal-soft);box-shadow:0 .2rem 0 var(--teal)}
+  .bword.miss{background:#E3E6E8;opacity:.5}
+  .bword.hint{box-shadow:0 0 0 .18rem var(--teal), 0 .2rem 0 #CBD2D8}
+  .sound{
+    font-family:inherit;font-size:.9rem;font-weight:700;color:var(--muted);
+    background:var(--panel-2);border:none;border-radius:999px;
+    padding:.4em .95em;cursor:pointer;display:inline-flex;align-items:center;gap:.4em;
+  }
+  .sound svg{width:1.1em;height:1.1em;fill:currentColor}
+
+  .sky{position:relative;flex:1 1 auto;min-height:0;border-radius:.7rem;overflow:hidden;background:#8FC9EA}
+  .sky canvas{display:block;width:100%;height:100%}
+  .caption{
+    position:absolute;left:0;right:0;bottom:0;margin:0;padding:1.2rem .6rem .45rem;
+    text-align:center;font-family:'Fredoka',sans-serif;font-size:1.6rem;font-weight:600;color:#fff;
+    text-shadow:0 2px 10px rgba(0,0,0,.55);
+    background:linear-gradient(to top,rgba(18,30,42,.5),transparent);
+    pointer-events:none;
+  }
+
+  .chips{display:grid;grid-template-columns:repeat(6,1fr);gap:.45rem;flex:0 0 auto}
+  .chip .b-pic{font-size:2.1rem}
+  .chip{
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:1rem;color:#2A2113;
+    background:var(--tint);border:none;border-radius:.7rem;
+    padding:.5rem .2rem .4rem;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15rem;
+    box-shadow:0 .2rem 0 var(--shade);
+    transition:transform .09s ease, box-shadow .09s ease;
+  }
+  .chip svg{width:2.3rem;height:2.3rem}
+  .chip:active,.chip.press{transform:translateY(.16rem);box-shadow:0 .04rem 0 var(--shade)}
+  .chip[aria-pressed="true"]{outline:.18rem solid var(--ink);outline-offset:.12rem}
+  .chip:focus-visible{outline:.18rem solid var(--teal);outline-offset:.12rem}
+  .chip-sunny {--tint:#FFD870;--shade:#DFAF2E}
+  .chip-cloudy{--tint:#DCE4EB;--shade:#B3C0CC}
+  .chip-rainy {--tint:#AEDAEF;--shade:#7EB6D5}
+  .chip-windy {--tint:#C2E7D6;--shade:#8FC7AE}
+  .chip-snowy {--tint:#E8EFF6;--shade:#BECCDA}
+  .chip-stormy{--tint:#CAC1E3;--shade:#A093C5}
+
+  /* ================= day strip ================= */
+  .strip.empty{display:none}
+  .strip{
+    background:var(--panel);border-radius:var(--r);
+    padding:.55rem .6rem;
+    display:grid;
+    grid-auto-flow:column;
+    grid-auto-columns:minmax(0,1fr);
+    gap:.35rem;
+  }
+  .slot{
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:.1rem;
+    padding:.4rem .15rem .35rem;border-radius:.6rem;text-align:center;min-width:0;
+    position:relative;
+  }
+  .slot .s-time{font-size:.78rem;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+  .slot .s-icon{font-size:1.9rem;line-height:1.15;position:relative}
+  .slot .s-icon img{width:1.9rem;height:1.9rem;object-fit:contain}
+  .slot .s-name{
+    font-family:'Fredoka',sans-serif;font-weight:500;font-size:.92rem;line-height:1.1;
+    color:var(--ink);overflow-wrap:break-word;hyphens:auto;
+  }
+  .slot.tappable{cursor:pointer}
+  .slot.done .s-time,.slot.done .s-icon,.slot.done .s-name{opacity:.3}
+  .slot.done::after{
+    content:"\2713";position:absolute;top:1.55rem;left:50%;margin-left:.5rem;
+    font-family:'Nunito',sans-serif;font-size:1.35rem;font-weight:800;color:var(--teal);
+    text-shadow:0 0 .2rem #FAF8F4, 0 0 .2rem #FAF8F4, 0 0 .2rem #FAF8F4;
+  }
+  .slot.now{background:var(--teal-soft);box-shadow:inset 0 0 0 .16rem var(--teal)}
+  .slot.now .s-time{color:#1D6259}
+  .slot.next{background:var(--panel-2)}
+
+  /* ================= chrome ================= */
+  .fs.fs2{right:2.6rem}
+  .editor{
+    position:fixed;inset:0;z-index:30;background:rgba(16,26,36,.8);
+    display:flex;align-items:center;justify-content:center;padding:3vh 3vw;
+  }
+  .editor[hidden]{display:none}
+  .ed-card{
+    background:var(--panel);border-radius:1rem;width:min(64rem,96vw);
+    max-height:94vh;display:flex;flex-direction:column;gap:.6rem;
+    padding:1rem 1.2rem 1.1rem;box-shadow:0 1.2rem 3rem rgba(0,0,0,.45);
+  }
+  .ed-head{display:flex;align-items:center;justify-content:space-between;gap:.8rem}
+  .ed-tabs{display:flex;flex-wrap:wrap;gap:.3rem}
+  .ed-tab{
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.1rem;
+    background:transparent;border:none;cursor:pointer;color:var(--muted);
+    padding:.25em .8em;border-radius:.5rem;
+  }
+  .ed-tab.on{background:var(--teal-soft);color:#1D6259}
+  .ed-tab.dirty::after{content:" \u2022";color:var(--coral)}
+  .ed-help{margin:0;font-size:.92rem;font-weight:600;color:var(--muted);line-height:1.35}
+  .ed-text{
+    flex:1 1 auto;min-height:34vh;resize:vertical;
+    font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;
+    font-size:.92rem;line-height:1.5;color:var(--ink);
+    background:#fff;border:.12rem solid var(--line);border-radius:.6rem;padding:.7rem .8rem;
+    white-space:pre;overflow:auto;
+  }
+  .ed-text:focus{outline:.16rem solid var(--teal);outline-offset:.06rem}
+  .ed-msg{margin:0;font-size:.95rem;font-weight:700;min-height:1.3em;color:var(--muted)}
+  .ed-msg.good{color:#1D6259}
+  .ed-msg.bad{color:#9C3A22}
+  .ed-actions{display:flex;flex-wrap:wrap;gap:.4rem}
+  .ed-btn{
+    font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;
+    background:var(--panel-2);color:var(--ink);border:none;
+    border-radius:.5rem;padding:.5em 1.1em;
+  }
+  .ed-btn:hover{background:#E2DCD1}
+  .ed-primary{background:var(--teal);color:#fff}
+  .ed-primary:hover{background:#256F66}
+
+  .modal{
+    position:fixed;inset:0;z-index:20;
+    background:rgba(16,26,36,.74);
+    display:flex;align-items:center;justify-content:center;
+    padding:5vh 5vw;cursor:pointer;
+  }
+  .modal[hidden]{display:none}
+  .modal-card{
+    background:var(--panel);border-radius:1.2rem;
+    border-bottom:.3rem solid var(--paper-edge);
+    padding:1.4rem 2.6rem 1.1rem;text-align:center;
+    max-width:min(52rem,92vw);max-height:88vh;overflow:auto;
+    box-shadow:0 1.2rem 3rem rgba(0,0,0,.45);
+  }
+  .modal-icon{font-size:4.2rem;line-height:1;display:block}
+  .modal-title{
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:2.6rem;
+    margin:.15em 0 .5em;color:var(--ink);
+  }
+  .modal-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr;gap:.4rem}
+  .modal-list.two{grid-template-columns:1fr 1fr;gap:.35rem .6rem}
+  .modal-list.dense li{font-size:1.5rem}
+  .modal-list li{
+    display:flex;align-items:baseline;gap:.6em;text-align:left;
+  }
+  .modal-list li::before{
+    content:"";flex:0 0 auto;width:.42em;height:.42em;border-radius:50%;
+    background:var(--teal);transform:translateY(-.15em);
+  }
+  .modal-list li{
+    font-family:'Fredoka',sans-serif;font-weight:500;font-size:2.15rem;line-height:1.15;
+    color:var(--ink);background:var(--panel-2);border-radius:.6rem;padding:.35em .7em;
+  }
+  .modal-hint{display:block;margin-top:1rem;font-size:1rem;font-weight:700;color:var(--muted)}
+
+  .status{
+    position:fixed;left:.6rem;bottom:.35rem;z-index:9;
+    font-size:.62rem;font-weight:700;color:rgba(255,255,255,.55);
+    opacity:.28;transition:opacity .15s ease;pointer-events:none;
+    max-width:80vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  body:hover .status{opacity:.75}
+  .status.warn{
+    color:#2A1D06;background:#F0C46A;opacity:1;
+    font-size:.85rem;padding:.3em .8em;border-radius:.4rem;
+  }
+
+  .fs{
+    position:fixed;top:.4rem;right:.5rem;z-index:9;
+    background:transparent;color:rgba(255,255,255,.5);
+    border:none;border-radius:.4rem;cursor:pointer;padding:.3rem;line-height:0;
+    opacity:.25;transition:opacity .15s ease;
+  }
+  .fs:hover,.fs:focus-visible{opacity:1}
+  .fs svg{width:1.1rem;height:1.1rem;fill:currentColor}
+
+  /* ================= small screens: allow scroll ================= */
+  @media (max-width:900px), (orientation:portrait){
+    body{overflow:auto}
+    .board{height:auto;min-height:100dvh;padding:2.5vh 4vw}
+    .middle{grid-template-columns:1fr}
+    .topbar{grid-template-columns:1fr;text-align:center;gap:.3rem}
+    .date-block{justify-content:center;flex-wrap:wrap}
+    .special{justify-self:center}
+    .clock{display:none}
+    .rightzone{align-items:center}
+    .chiprow{flex-wrap:wrap;justify-content:center}
+    .sky{aspect-ratio:16/9;flex:0 0 auto}
+    .strip{grid-auto-flow:row;grid-template-columns:repeat(4,1fr);grid-auto-columns:auto}
+  }
+
+  @media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+
+<button class="fs fs2" id="editBtn" title="Edit the board" aria-label="Edit the board">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+</button>
+<button class="fs" id="fsBtn" title="Full screen" aria-label="Full screen">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5v2H6v3H4zm11-5h5v5h-2V6h-3V4zM4 15h2v3h3v2H4v-5zm14 0h2v5h-5v-2h3v-3z"/></svg>
+</button>
+
+<div class="editor" id="editor" hidden>
+  <div class="ed-card">
+    <div class="ed-head">
+      <div class="ed-tabs" id="edTabs"></div>
+      <button class="ed-btn" id="edClose">Close</button>
+    </div>
+    <p class="ed-help" id="edHelp"></p>
+    <textarea class="ed-text" id="edText" spellcheck="false" autocomplete="off"></textarea>
+    <p class="ed-msg" id="edMsg"></p>
+    <div class="ed-actions">
+      <button class="ed-btn ed-primary" id="edSave">Save</button>
+      <button class="ed-btn" id="edRevert">Undo my changes</button>
+      <button class="ed-btn" id="edCopy">Copy</button>
+      <button class="ed-btn" id="edDownload">Download</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="lunchModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="lunchTitle">
+    <span class="modal-icon" aria-hidden="true">🍽️</span>
+    <h2 class="modal-title" id="lunchTitle">Lunch today</h2>
+    <ul class="modal-list" id="lunchList"></ul>
+    <span class="modal-hint">Tap anywhere to close</span>
+  </div>
+</div>
+
+<div class="status" id="status"></div>
+
+<div class="board">
+
+  <header class="topbar">
+    <div class="date-block">
+      <span class="lead">Today is</span>
+      <span class="weekday" id="weekday">—</span>
+      <span class="datenum" id="datenum">—</span>
+      <span class="daytype" id="daytype"></span>
+    </div>
+    <div class="chiprow">
+      <div class="special" id="special"></div>
+      <button class="lunchchip" id="lunchChip" aria-haspopup="dialog"></button>
+    </div>
+    <div class="rightzone">
+      <div class="helper" id="helper"></div>
+      <div class="clock" id="clock">—</div>
+    </div>
+  </header>
+
+  <main class="middle">
+
+    <section class="firstthen">
+      <div class="ft ft-now" id="nowCard">
+        <span class="ft-label" id="nowLabel">First</span>
+        <div class="ft-body">
+          <span class="ft-icon" id="nowIcon" aria-hidden="true"></span>
+          <span class="ft-text">
+            <span class="ft-name" id="nowName">—</span>
+            <span class="ft-detail" id="nowDetail"></span>
+          </span>
+        </div>
+        <div class="timer hide" id="timer">
+          <div class="track"><i id="bar"></i></div>
+          <div class="left" id="left" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <div class="ft ft-then" id="thenCard">
+        <span class="ft-label">Then</span>
+        <div class="ft-body">
+          <span class="ft-icon" id="thenIcon" aria-hidden="true"></span>
+          <span class="ft-text">
+            <span class="ft-name" id="thenName">—</span>
+            <span class="ft-detail" id="thenDetail"></span>
+          </span>
+        </div>
+        <span></span>
+      </div>
+    </section>
+
+    <section class="panel side">
+      <div class="panel-head">
+        <div class="tabs" role="tablist">
+          <button class="tab on" id="tabWeather" role="tab" aria-selected="true">Weather</button>
+          <button class="tab" id="tabWord" role="tab" aria-selected="false">Word</button>
+        </div>
+        <div class="headtools">
+          <button class="sound" id="newWordBtn" hidden>New word</button>
+          <button class="sound" id="soundBtn" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true" id="soundIcon"></svg>
+            <span id="soundLabel">Sound on</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="view" id="viewWeather">
+        <div class="sky">
+          <canvas id="sky"></canvas>
+          <p class="caption" id="caption" aria-live="polite">Pick the weather</p>
+        </div>
+        <div class="chips" id="chips"></div>
+      </div>
+
+      <div class="view" id="viewWord" hidden>
+        <div class="wordcard" id="wordCard">
+          <span class="w-icon" id="wIcon" aria-hidden="true"></span>
+          <span class="w-text">
+            <span class="w-word" id="wWord">—</span>
+            <span class="w-sent" id="wSent"></span>
+          </span>
+        </div>
+        <p class="w-prompt" id="wPrompt" aria-live="polite">Find the word</p>
+        <div class="bank" id="bank"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="strip" id="strip"></footer>
+</div>
+
+<!-- ==========================================================================
+     The lunch menu lives in lunch.js, next to this page.
+     Everything else is set up in the block below — or press the pencil button
+     in the top right of the board and change any of it on screen.
+     ========================================================================== -->
+<script src="lunch.js"></script>
+
+<script>
+
+/* ###########################################################################
+   SCHEDULE  +  CLASS LIST
+   ########################################################################### */
+
+/* ===========================================================================
+   CLASS SCHEDULE  —  built on the Kawananakoa Middle School bell schedule
+   ---------------------------------------------------------------------------
+   Open this in any plain text editor, change the lines, save, refresh.
+
+       start time , end time , name , picture , note , days , block
+
+   start    8:00 or 8:00 AM or 13:30. A bare 1:00-6:59 is read as afternoon.
+   end      Leave it BLANK and the activity runs until the next one starts.
+            Most rows below do this on purpose — it means no dead gaps on the
+            board, and if you move one activity the ones around it close up.
+   name     One or two words, shown in very large type.
+   picture  An emoji, or img:pictures/math.png for your own symbol file.
+   note     A short line under the name. Wrap it in "quotes" if it has commas.
+   days     Blank = every day. Or M, Tu, W, Th, F. Quotes around a list of
+            several days are tidier but not required.
+   block    Only used if calendar.js defines a rotation. Not needed here —
+            this school's periods are fixed by weekday, so the days column
+            does the whole job.
+
+   --------------------------------------------------------------------------
+   HOW THE PERIODS MAP
+
+   The school runs six periods on a weekly drop rotation:
+
+                    Mon   Tue   Wed   Thu   Fri
+       8:00-8:50     1     6     5     3     2
+       8:55-9:45     2     1     6     4     3
+       9:45-10:00        Recess, every day
+      10:05-10:55     3     2     1     5     4
+      11:00-11:50     4     3     2     6     5
+
+   The first slot of the day is always Arrival, Morning Meeting and Morning
+   Exercise, whatever period number it carries.
+
+   Period 2 is specials, and specials always win — it is the prep period.
+   It moves around the week, so specials land at a different time each day:
+   Monday 8:55, Tuesday 10:05, Wednesday 11:00, Friday 8:15. Thursday has no
+   Period 2 at all, so there are no specials that day.
+
+   On Friday specials take the first slot, so Morning Meeting and Morning
+   Exercise move to 8:55 and the Period 3 Work Block gives way.
+
+   A campus walk follows recess every day, in the ten minutes before the
+   next period starts.
+
+   Every other slot is Work Block. The period number sits in the note so you
+   can see it at a glance without the students having to read it.
+   =========================================================================== */
+
+window.SCHEDULE_CSV = `
+start,  end,   name,              picture, note,                                                   days
+
+# ---- the same every day ----
+8:00,   ,      Arrival,           🎒,      Bags away say hello,
+9:45,   ,      Recess,            🏃,      Outside,
+9:55,   ,      Campus walk,       🚶,      Around the school,
+11:20,  ,      Get ready,         🧼,      Wash hands and line up,
+
+# ---- morning routine, Monday to Thursday (Friday is different, see below) ----
+8:15,   ,      Morning Meeting,   👋,      Calendar and weather,                                   "M, Tu, W, Th"
+8:30,   ,      Morning Exercise,  🤸,      ,                                                       "M, Tu, W, Th"
+11:30,  ,      Lunch,             🍽️,      ,
+12:30,  ,      Break,             🧩,      Sensory area,
+1:00,   ,      Chores,            🧹,      Classroom jobs,
+1:30,   2:00,  Departure,         🚌,      Pick up time,
+
+# ---- Monday: periods 1, 2, 3, 4 ----
+8:55,   ,      Specials,          🎨,      "Art: Tengis, Jayden — P.E.: Josiah, Nathan, Tineafi",   M
+10:05,  ,      Work Block,        📚,      Period 3,                                               M
+11:00,  ,      Work Block,        📚,      Period 4,                                               M
+
+# ---- Tuesday: periods 6, 1, 2, 3 ----
+8:55,   ,      Work Block,        📚,      Period 1,                                               Tu
+10:05,  ,      Specials,          🎨,      "Art: Tengis, Jayden — P.E.: Josiah, Nathan, Tineafi",   Tu
+11:00,  ,      Work Block,        📚,      Period 3,                                               Tu
+
+# ---- Wednesday: periods 5, 6, 1, 2 ----
+# Period 2 is 11:00-11:50, which runs into getting ready for lunch, so
+# specials only get 11:00 to 11:20 here. Flagged in the chat.
+8:55,   ,      Work Block,        📚,      Period 6,                                               W
+10:05,  ,      Work Block,        📚,      Period 1,                                               W
+11:00,  ,      Specials,          🎨,      "Art: Tengis, Jayden — P.E.: Josiah, Nathan, Tineafi",   W
+
+# ---- Thursday: periods 3, 4, 5, 6 — no Period 2 today, so no specials ----
+8:55,   ,      Work Block,        📚,      Period 4,                                               Th
+10:05,  ,      Work Block,        📚,      Period 5,                                               Th
+11:00,  ,      Work Block,        📚,      Period 6,                                               Th
+
+# ---- Friday: periods 2, 3, 4, 5 — Period 2 is first, and specials win.
+#      Morning Meeting and Morning Exercise slide into the 8:55 slot. ----
+8:15,   ,      Specials,          🎨,      "Art: Tengis, Jayden — P.E.: Josiah, Nathan, Tineafi",   F
+8:55,   ,      Morning Meeting,   👋,      Calendar and weather,                                   F
+9:15,   ,      Morning Exercise,  🤸,      ,                                                       F
+10:05,  ,      Work Block,        📚,      Period 4,                                               F
+11:00,  ,      Work Block,        📚,      Period 5,                                               F
+
+# ---------------------------------------------------------------------------
+# Spare rows. Delete the # to switch one on.
+#
+# 12:30, ,     Work Block,        📚,      Period 2 make-up,                                       Th
+# 8:55,  ,     Speech,            💬,      Small group,                                            "M, W, F"
+# ---------------------------------------------------------------------------
+`;
+
+
+/* ===========================================================================
+   CLASS LIST
+   ---------------------------------------------------------------------------
+   First names only, separated by commas. The board picks one helper per day
+   and works through the whole list before anyone repeats, so it is a fair
+   turn rather than a coin flip. Days off are skipped, so a Monday holiday
+   does not cost anyone their turn.
+
+   Leave it blank — window.ROSTER = ""; — and the helper line disappears.
+   =========================================================================== */
+
+window.ROSTER = "Jayden, Josiah, Nathan, Tengis, Tineafi";
+window.HELPER_LABEL = "Helper today";
+
+
+/* ###########################################################################
+   SCHOOL YEAR CALENDAR
+   ########################################################################### */
+
+/* ===========================================================================
+   SCHOOL YEAR CALENDAR
+   ---------------------------------------------------------------------------
+   Two jobs: it tells the board which days there is no school, and which day
+   of your block rotation today is.
+
+   Dates are always year-month-day: 2026-09-07
+
+   Line types:
+
+     first day, 2026-08-03            When the school year starts
+     last day,  2027-05-27            When it ends. Outside these, no school.
+
+     no school, 2026-09-07, Labor Day
+     no school, 2026-10-05 to 2026-10-09, Fall Break
+                                      One date, or a range using "to".
+                                      The label shows on the board that day.
+
+     cycle, A, B                      Your block rotation, in order. Could be
+                                      A, B — or 1, 2, 3, 4, 5, 6 — or
+                                      Blue, Gold. Leave this line out if your
+                                      schedule is the same every week.
+     cycle start, 2026-08-03          The first school day of the rotation.
+
+     day, 2026-09-14, A               Force one date to a particular day of the
+                                      rotation, for when an assembly or a
+                                      cancellation knocks the cycle out of step.
+
+   Weekends are always off — you don't need to list them. Days off are skipped
+   when counting the rotation, so a Monday holiday does not flip your A and B
+   days for the rest of the year.
+
+   The dates below are the Hawaii State Department of Education official
+   2026-2027 calendar, amended March 30, 2026. Check them against what your
+   school sent home — individual campuses add their own days.
+   =========================================================================== */
+
+window.SCHOOL_CALENDAR = `
+first day, 2026-08-03
+last day,  2027-05-27
+
+no school, 2026-08-21, Statehood Day
+no school, 2026-09-07, Labor Day
+no school, 2026-10-05 to 2026-10-09, Fall Break
+no school, 2026-11-03, Election Day
+no school, 2026-11-11, Veterans Day
+no school, 2026-11-26, Thanksgiving
+no school, 2026-11-27, School Holiday
+no school, 2026-12-21 to 2027-01-01, Winter Break
+no school, 2027-01-04, Teacher Work Day
+no school, 2027-01-18, Martin Luther King Jr. Day
+no school, 2027-02-15, Presidents Day
+no school, 2027-03-15 to 2027-03-19, Spring Break
+no school, 2027-03-26, Good Friday
+no school, 2027-03-29, Prince Kuhio Day
+no school, 2027-05-31, Memorial Day
+
+# HIDOE sets one Institute Day during February 8-12 with no students, and the
+# date is chosen per island. Add yours here once your school announces it:
+# no school, 2027-02-10, Institute Day
+
+# Your own campus days go here too:
+# no school, 2026-10-16, Teacher Work Day
+# no school, 2027-04-02, Parent Conferences
+
+# ---------------------------------------------------------------------------
+# BLOCK ROTATION
+# Delete the # marks below and change the labels to match your school.
+# ---------------------------------------------------------------------------
+# cycle, A, B
+# cycle start, 2026-08-03
+#
+# When a fire drill or a snow-in-Hawaii miracle knocks the cycle off, pin it:
+# day, 2026-09-14, A
+`;
+
+
+/* ###########################################################################
+   WORD OF THE DAY
+   ########################################################################### */
+
+/* ===========================================================================
+   WORD OF THE DAY + WORD BANK
+   ---------------------------------------------------------------------------
+   One word per line:
+
+       word , picture , sentence , group
+
+   word      What the class is learning.
+   picture   An emoji, or img:pictures/help.png for your own symbol.
+             LEAVE IT BLANK for sight words — the tile then shows the word on
+             its own, which is the point. Matching a word to a word is the
+             skill; a picture would let a student answer without reading.
+   sentence  A short model sentence using the word. Four to six words.
+   group     The word bank fills with other words from the SAME group, so the
+             choice is a real one. Sight words only compete against sight
+             words at the same level.
+
+   HOW MANY CHOICES: WORD_BANK_SIZE below takes 2, 3, 4, 6, or 8. Match it to
+   the array the student is working on. Start small and grow it.
+
+   WHICH WORDS: WORD_FOCUS below picks which groups are in rotation. Leave it
+   blank for everything. Or name groups to drill one set for a few weeks:
+
+       window.WORD_FOCUS = "sight pp";              just pre-primer
+       window.WORD_FOCUS = "sight pp, sight p";     pre-primer and primer
+       window.WORD_FOCUS = "core, action";          back to the AAC words
+
+   That matters here. With everything switched on the list runs 182 words,
+   which is about one school year — each word comes up once. Narrowing to one
+   group brings a word back every few weeks instead, which is closer to the
+   repetition these goals call for.
+
+   Tile positions stay put all day. Students who navigate by motor memory
+   should not have the target move on them.
+   =========================================================================== */
+
+window.WORD_BANK_SIZE = 6;
+window.WORD_FOCUS = "";
+
+window.WORD_LIST = `
+word,        picture, sentence,                     group
+
+# ---- core words: the ones that unlock the most, and the ones the AAC
+#      devices in this room are built around ----
+more,        ➕,      I want more.,                 core
+help,        🙋,      I need help.,                 core
+break,       🧩,      I need a break.,              core
+stop,        🛑,      Please stop.,                 core
+go,          ➡️,      It is time to go.,            core
+want,        🤲,      I want a snack.,              core
+all done,    ✅,      I am all done.,               core
+yes,         👍,      Yes please.,                  core
+no,          👎,      No thank you.,                core
+look,        👀,      Look at me.,                  core
+turn,        🔁,      It is my turn.,               core
+wait,        ⏳,      I can wait.,                  core
+
+# ---- actions ----
+eat,         🍴,      I eat my lunch.,              action
+drink,       🥤,      I drink water.,               action
+sit,         🪑,      I sit down.,                  action
+stand,       🧍,      I stand up.,                  action
+walk,        🚶,      We walk in line.,             action
+wash,        🧼,      I wash my hands.,             action
+open,        🔓,      Open the box.,                action
+give,        🤝,      I give it to you.,            action
+read,        📖,      I read a book.,               action
+write,       ✏️,      I write my name.,             action
+listen,      👂,      I listen to my teacher.,      action
+
+# ---- things in our room ----
+backpack,    🎒,      My backpack is here.,         thing
+chair,       💺,      I sit on my chair.,           thing
+book,        📚,      I want that book.,            thing
+pencil,      🖍️,      I need a pencil.,             thing
+paper,       📄,      Give me some paper.,          thing
+cup,         🥛,      My cup is full.,              thing
+water,       💧,      I want water.,                thing
+snack,       🍎,      It is snack time.,            thing
+bathroom,    🚻,      I need the bathroom.,         thing
+towel,       🧻,      I dry with a towel.,          thing
+shoes,       👟,      I put on my shoes.,           thing
+jacket,      🧥,      I wear my jacket.,            thing
+
+# ---- feelings ----
+happy,       😀,      I feel happy.,                feeling
+sad,         😢,      I feel sad.,                  feeling
+tired,       😴,      I feel tired.,                feeling
+mad,         😠,      I feel mad.,                  feeling
+calm,        😌,      I feel calm.,                 feeling
+sick,        🤒,      I feel sick.,                 feeling
+scared,      😨,      I feel scared.,               feeling
+
+# ---- greetings and manners ----
+hello,       👋,      Hello. How are you?,          greeting
+goodbye,     ✌️,      Goodbye. See you tomorrow.,   greeting
+please,      🙏,      Can I have it please?,        greeting
+thank you,   💛,      Thank you for helping.,       greeting
+sorry,       😔,      I am sorry.,                  greeting
+excuse me,   🙇,      Excuse me please.,            greeting
+
+
+# ---- PRE-PRIMER sight words (Dolch, 40) — no pictures on purpose ----
+a          , , I see a cat.                , sight pp
+and        , , You and me.                 , sight pp
+away       , , Go away bug.                , sight pp
+big        , , That is big.                , sight pp
+blue       , , The sky is blue.            , sight pp
+can        , , I can do it.                , sight pp
+come       , , Come with me.               , sight pp
+down       , , Sit down please.            , sight pp
+find       , , Can you find it?            , sight pp
+for        , , This is for you.            , sight pp
+funny      , , That is funny.              , sight pp
+go         , , It is time to go.           , sight pp
+help       , , I need help.                , sight pp
+here       , , Come over here.             , sight pp
+I          , , I am ready.                 , sight pp
+in         , , Put it in.                  , sight pp
+is         , , This is mine.               , sight pp
+it         , , I want it.                  , sight pp
+jump       , , Watch me jump.              , sight pp
+little     , , A little cat.               , sight pp
+look       , , Look at me.                 , sight pp
+make       , , Let us make it.             , sight pp
+me         , , Give it to me.              , sight pp
+my         , , That is my book.            , sight pp
+not        , , It is not here.             , sight pp
+one        , , I want one.                 , sight pp
+play       , , Let us play.                , sight pp
+red        , , The apple is red.           , sight pp
+run        , , I can run fast.             , sight pp
+said       , , She said hello.             , sight pp
+see        , , I see you.                  , sight pp
+the        , , The dog is big.             , sight pp
+three      , , I have three.               , sight pp
+to         , , I go to school.             , sight pp
+two        , , Two more please.            , sight pp
+up         , , Stand up now.               , sight pp
+we         , , We are ready.               , sight pp
+where      , , Where is it?                , sight pp
+yellow     , , The sun is yellow.          , sight pp
+you        , , How are you?                , sight pp
+
+# ---- PRIMER sight words (Dolch, 52) ----
+all        , , That is all.                , sight p
+am         , , I am happy.                 , sight p
+are        , , You are my friend.          , sight p
+at         , , Look at this.               , sight p
+ate        , , I ate my lunch.             , sight p
+be         , , Be nice please.             , sight p
+black      , , My shoes are black.         , sight p
+brown      , , The dog is brown.           , sight p
+but        , , Small but strong.           , sight p
+came       , , She came to school.         , sight p
+did        , , I did my work.              , sight p
+do         , , I can do it.                , sight p
+eat        , , I eat my snack.             , sight p
+four       , , I see four birds.           , sight p
+get        , , Get your bag.               , sight p
+good       , , You did good work.          , sight p
+have       , , I have a book.              , sight p
+he         , , He is my friend.            , sight p
+into       , , Go into the room.           , sight p
+like       , , I like pizza.               , sight p
+must       , , I must wash up.             , sight p
+new        , , I have new shoes.           , sight p
+no         , , No thank you.               , sight p
+now        , , We go now.                  , sight p
+on         , , Put it on.                  , sight p
+our        , , This is our room.           , sight p
+out        , , Let us go out.              , sight p
+please     , , Help me please.             , sight p
+pretty     , , That is pretty.             , sight p
+ran        , , I ran outside.              , sight p
+ride       , , I ride the bus.             , sight p
+saw        , , I saw a bird.               , sight p
+say        , , Say hello to me.            , sight p
+she        , , She is here.                , sight p
+so         , , I am so happy.              , sight p
+soon       , , Lunch is soon.              , sight p
+that       , , I want that one.            , sight p
+there      , , Put it over there.          , sight p
+they       , , They are my friends.        , sight p
+this       , , I like this.                , sight p
+too        , , Me too.                     , sight p
+under      , , It is under the desk.       , sight p
+want       , , I want more.                , sight p
+was        , , It was fun.                 , sight p
+well       , , I feel well.                , sight p
+went       , , We went outside.            , sight p
+what       , , What is that?               , sight p
+white      , , The paper is white.         , sight p
+who        , , Who is here?                , sight p
+will       , , I will help.                , sight p
+with       , , Come with me.               , sight p
+yes        , , Yes please.                 , sight p
+
+# ---- FIRST GRADE sight words (Dolch, 41) ----
+after      , , We walk after recess.       , sight 1
+again      , , Do it again.                , sight 1
+an         , , I want an apple.            , sight 1
+any        , , Do you have any?            , sight 1
+as         , , Big as a bus.               , sight 1
+ask        , , Ask for help.               , sight 1
+by         , , Sit by me.                  , sight 1
+could      , , I could do it.              , sight 1
+every      , , Every day we read.          , sight 1
+fly        , , Birds can fly.              , sight 1
+from       , , This is from me.            , sight 1
+give       , , Give it to me.              , sight 1
+going      , , I am going home.            , sight 1
+had        , , I had a snack.              , sight 1
+has        , , She has a book.             , sight 1
+her        , , That is her bag.            , sight 1
+him        , , Give it to him.             , sight 1
+his        , , That is his chair.          , sight 1
+how        , , How are you?                , sight 1
+just       , , I just finished.            , sight 1
+know       , , I know that word.           , sight 1
+let        , , Let me try.                 , sight 1
+live       , , I live near school.         , sight 1
+may        , , May I go?                   , sight 1
+of         , , A cup of water.             , sight 1
+old        , , My shoes are old.           , sight 1
+once       , , Read it once.               , sight 1
+open       , , Open the door.              , sight 1
+over       , , It is over there.           , sight 1
+put        , , Put it away.                , sight 1
+round      , , The ball is round.          , sight 1
+some       , , I want some more.           , sight 1
+stop       , , Please stop.                , sight 1
+take       , , Take your bag.              , sight 1
+thank      , , Thank you.                  , sight 1
+them       , , Give it to them.            , sight 1
+then       , , We eat then we play.        , sight 1
+think      , , I think it is fun.          , sight 1
+walk       , , We walk in line.            , sight 1
+were       , , We were happy.              , sight 1
+when       , , When is lunch?              , sight 1
+
+# Dolch second and third grade lists are not here on purpose — they sit above
+# where this class is reading right now. Ask and I will add them.
+`;
+</script>
+
+<script>
+/* ============================================================================
+   1. THE DAY
+   [start, end, name, detail, icon]      13.5 means 1:30 pm
+   Keep names to one or two words — this class reads at a K–1 level.
+   For "icon" you can use an emoji, or "img:pictures/math.png" to swap in the
+   same symbols used on the AAC boards and picture schedules.
+   ============================================================================ */
+/* Where the schedule comes from, in priority order:
+     1. a published Google Sheet, if you paste its CSV link into SCHEDULE_URL below
+     2. schedule.csv, if this page is served from a web server
+     3. schedule.js sitting next to this file — works even when you just
+        double-click this page, so this is the usual one to edit
+     4. the built-in copy below, if none of the above are found
+   The small label in the bottom-left corner always says which one is live. */
+
+const SCHEDULE_URL = "";      // optional: a published Google Sheet CSV link
+const CALENDAR_URL = "";      // optional: same, for the school year calendar
+const LUNCH_FILE   = "";      // not used — the menu comes from lunch.js
+const LUNCH_URL    = "";      // optional: a published Google Sheet CSV link instead
+const WORDS_URL    = "";      // optional: same, for the word list
+
+let SCHEDULE = [];            // today's activities — filled in by the loader
+let RAW_ROWS = [];
+
+/* Used ONLY when schedule.js cannot be found. It deliberately says so rather
+   than showing a plausible-looking schedule, because a silent fallback is
+   impossible to spot from across the room. */
+const BUILT_IN = `
+start, end,   name,              picture, note
+8:00,  3:00,  No schedule file,  \u26A0\uFE0F,  schedule.js is not in the same folder as this page
+`;
+
+/* How many seconds before the end of an activity to give a warning.
+   These come straight off the time-priming accommodation. */
+const PRIME = [120, 60, 30];
+
+/* Say "First / Then" or "Now / Next" — match whatever the students are taught. */
+const LABEL_NOW  = "First";
+const LABEL_NEXT = "Then";
+
+/* ============================================================================
+   2. CALENDAR
+   Each entry works out its own date every year, so this never needs updating.
+     fixed(month, day)      nth(month, weekday, n)      lastOf(month, weekday)
+     dated("2027-02-11")    shift(rule, days)
+   Weekdays: 0 Sun, 1 Mon, 2 Tue, 3 Wed, 4 Thu, 5 Fri, 6 Sat
+   "days" is how early the countdown starts (default 14).
+   ============================================================================ */
+const CALENDAR = [
+  // ---- your own days: picture day, field trips, birthdays, breaks ----
+  // { when: dated("2026-09-15"), name:"Picture day", icon:"\u{1F4F8}", color:"#4E86A8" },
+
+  { when: fixed(1, 1),    name:"New Year's Day",   greeting:"Happy New Year",       icon:"\u{1F389}", color:"#7A6BA8" },
+  { when: nth(1, 1, 3),   name:"Martin Luther King Jr. Day",                        icon:"\u{1F54A}\u{FE0F}", color:"#4E86A8" },
+  { when: fixed(2, 14),   name:"Valentine's Day",  greeting:"Happy Valentine's Day",icon:"\u{1F49D}", color:"#C9557A" },
+  { when: nth(2, 1, 3),   name:"Presidents' Day",                                   icon:"\u{1F3DB}\u{FE0F}", color:"#4E7BA8" },
+  { when: fixed(3, 17),   name:"St. Patrick's Day",greeting:"Happy St. Patrick's Day", icon:"\u{1F340}", color:"#3D8F63" },
+  { when: fixed(3, 20),   name:"First day of spring",                               icon:"\u{1F337}", color:"#5FA544" },
+  { when: fixed(3, 26),   name:"Prince K\u016Bhi\u014D Day",                        icon:"\u{1F33A}", color:"#B85433" },
+  { when: shift(easterRule, -2), name:"Good Friday",                                icon:"\u{271D}\u{FE0F}", color:"#6F6394" },
+  { when: easterRule,     name:"Easter",           greeting:"Happy Easter",         icon:"\u{1F430}", color:"#B183C4" },
+  { when: fixed(4, 22),   name:"Earth Day",                                         icon:"\u{1F30D}", color:"#3D8F63" },
+  { when: fixed(5, 1),    name:"Lei Day",          greeting:"Happy Lei Day",        icon:"\u{1F33A}", color:"#C9557A" },
+  { when: nth(5, 0, 2),   name:"Mother's Day",     greeting:"Happy Mother's Day",   icon:"\u{1F49B}", color:"#C9557A" },
+  { when: lastOf(5, 1),   name:"Memorial Day",                                      icon:"\u{1F1FA}\u{1F1F8}", color:"#4E7BA8" },
+  { when: fixed(6, 11),   name:"King Kamehameha Day",                               icon:"\u{1F451}", color:"#B85433" },
+  { when: nth(6, 0, 3),   name:"Father's Day",     greeting:"Happy Father's Day",   icon:"\u{1F49A}", color:"#4E86A8" },
+  { when: fixed(6, 19),   name:"Juneteenth",                                        icon:"\u{1F386}", color:"#7A6BA8" },
+  { when: fixed(6, 21),   name:"First day of summer",                               icon:"\u{2600}\u{FE0F}", color:"#D89A22" },
+  { when: fixed(7, 4),    name:"Fourth of July",   greeting:"Happy Fourth of July", icon:"\u{1F386}", color:"#4E7BA8" },
+  { when: nth(8, 5, 3),   name:"Statehood Day",                                     icon:"\u{1F334}", color:"#2E8B72" },
+  { when: nth(9, 1, 1),   name:"Labor Day",                                         icon:"\u{1F6E0}\u{FE0F}", color:"#7E6E52" },
+  { when: fixed(9, 22),   name:"First day of fall",                                 icon:"\u{1F342}", color:"#C4762B" },
+  { when: fixed(10, 31),  name:"Halloween",        greeting:"Happy Halloween",      icon:"\u{1F383}", color:"#CE7422", days:21 },
+  { when: fixed(11, 11),  name:"Veterans Day",                                      icon:"\u{1F1FA}\u{1F1F8}", color:"#4E7BA8" },
+  { when: nth(11, 4, 4),  name:"Thanksgiving",     greeting:"Happy Thanksgiving",   icon:"\u{1F983}", color:"#B85433", days:21 },
+  { when: fixed(12, 21),  name:"First day of winter",                               icon:"\u{2744}\u{FE0F}", color:"#4E86A8" },
+  { when: fixed(12, 24),  name:"Christmas Eve",                                     icon:"\u{1F384}", color:"#3D8F63" },
+  { when: fixed(12, 25),  name:"Christmas",        greeting:"Merry Christmas",      icon:"\u{1F384}", color:"#B33A32", days:30 },
+  { when: fixed(12, 31),  name:"New Year's Eve",                                    icon:"\u{1F387}", color:"#7A6BA8" }
+];
+// Hanukkah, Lunar New Year and Ramadan follow lunar calendars — add those with
+// dated("2026-12-04") entries for the years you need.
+
+function fixed(m,d){ return y => new Date(y, m-1, d); }
+function nth(m,wd,n){
+  return y => {
+    const first = new Date(y, m-1, 1);
+    return new Date(y, m-1, 1 + ((wd - first.getDay() + 7) % 7) + (n-1)*7);
+  };
+}
+function lastOf(m,wd){
+  return y => {
+    const end = new Date(y, m, 0);
+    return new Date(y, m-1, end.getDate() - ((end.getDay() - wd + 7) % 7));
+  };
+}
+function dated(iso){ const [y,m,d] = iso.split('-').map(Number); return () => new Date(y,m-1,d); }
+function shift(rule,days){ return y => { const dt = rule(y); dt.setDate(dt.getDate()+days); return dt; }; }
+function easterRule(y){
+  const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,
+        f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,
+        i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,
+        mth=Math.floor((a+11*h+22*l)/451),
+        mo=Math.floor((h+l-7*mth+114)/31), da=((h+l-7*mth+114)%31)+1;
+  return new Date(y, mo-1, da);
+}
+
+const DAY_MS = 86400000;
+const midnight = dt => new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+
+function renderCalendar(now){
+  const today = midnight(now), y = today.getFullYear();
+  const all = [];
+  [y, y+1].forEach(yy => CALENDAR.forEach(ev => {
+    let dt; try { dt = ev.when(yy); } catch(e){ return; }
+    if (dt && !isNaN(dt)) all.push({ ev, date: midnight(dt) });
+  }));
+  // school breaks from calendar.js count down too
+  CLOSURES.forEach(c => {
+    if (c.to.getTime() - c.from.getTime() < 86400000) return;   // single days already covered
+    all.push({ ev: { name: c.label, icon: '\u{1F3D6}\u{FE0F}', color: '#3E7F8C', days: 21 },
+               date: midnight(c.from) });
+  });
+  all.sort((a,b) => a.date - b.date);
+
+  const el = document.getElementById('special');
+  el.className = 'special'; el.textContent = '';
+
+  const todays = all.find(o => +o.date === +today);
+  if (todays){
+    el.innerHTML = '<span>' + todays.ev.icon + '</span><span>' +
+                   (todays.ev.greeting || todays.ev.name) + '</span>';
+    el.style.setProperty('--chip', todays.ev.color);
+    el.style.setProperty('--chipink', '#fff');
+    el.classList.add('on');
+    return;
+  }
+  for (const o of all){
+    if (o.date <= today) continue;
+    const n = Math.round((o.date - today) / DAY_MS);
+    if (n > (o.ev.days || 14)) continue;
+    el.innerHTML = '<span>' + o.ev.icon + '</span><span>' +
+      (n === 1 ? o.ev.name + ' is tomorrow' : n + ' days until ' + o.ev.name) + '</span>';
+    el.style.setProperty('--chip', '#E7ECEF');
+    el.style.setProperty('--chipink', '#17222D');
+    el.classList.add('on');
+    return;
+  }
+}
+
+/* ============================================================================
+   3. CLOCK AND DATE
+   ============================================================================ */
+const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const MONTHS = ["January","February","March","April","May","June","July",
+                "August","September","October","November","December"];
+
+function fmt(t){
+  const h = Math.floor(t + 1e-9), m = Math.round((t - h) * 60);
+  let hh = h % 12; if (hh === 0) hh = 12;
+  return hh + ":" + String(m).padStart(2,'0');
+}
+function ampm(t){ return Math.floor(t + 1e-9) >= 12 ? "pm" : "am"; }
+
+function setIcon(el, icon){
+  if (typeof icon === 'string' && icon.slice(0,4) === 'img:'){
+    el.innerHTML = '';
+    const im = document.createElement('img');
+    im.src = icon.slice(4); im.alt = '';
+    el.appendChild(im);
+  } else {
+    el.textContent = icon;
+  }
+}
+
+/* ============================================================================
+   3b. READING THE SCHEDULE FILE
+   ============================================================================ */
+function parseCSV(text){
+  const rows = []; let row = [], field = '', quoted = false;
+  for (let i = 0; i < text.length; i++){
+    const c = text[i];
+    if (quoted){
+      if (c === '"'){ if (text[i+1] === '"'){ field += '"'; i++; } else quoted = false; }
+      else field += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ','){ row.push(field); field = ''; }
+    else if (c === '\n'){ row.push(field); rows.push(row); row = []; field = ''; }
+    else if (c !== '\r') field += c;
+  }
+  if (field.length || row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+
+/* Accepts 8:00, 8:00 AM, 13:30, 1:30 PM. A bare 1:00-6:59 is read as afternoon,
+   since no school day starts then. */
+function parseTime(s){
+  if (!s) return null;
+  const m = String(s).trim().match(/^(\d{1,2})[:.]?(\d{2})?\s*(a\.?m?\.?|p\.?m?\.?)?$/i);
+  if (!m) return null;
+  let h = +m[1]; const min = m[2] ? +m[2] : 0;
+  if (h > 23 || min > 59) return null;
+  const ap = m[3] ? m[3][0].toLowerCase() : '';
+  if (ap === 'p' && h < 12) h += 12;
+  else if (ap === 'a' && h === 12) h = 0;
+  else if (!ap && h >= 1 && h <= 6) h += 12;
+  return h + min/60;
+}
+
+const DAYMAP = {su:0,sun:0,sunday:0,m:1,mo:1,mon:1,monday:1,tu:2,tue:2,tues:2,tuesday:2,
+  w:3,we:3,wed:3,wednesday:3,th:4,thu:4,thur:4,thurs:4,thursday:4,
+  f:5,fr:5,fri:5,friday:5,sa:6,sat:6,saturday:6,daily:-1,everyday:-1,all:-1};
+function parseDays(s){
+  if (!s || !s.trim()) return null;
+  const set = [];
+  s.toLowerCase().split(/[\s,\/+;&-]+/).forEach(tok => {
+    const v = DAYMAP[tok];
+    if (v === -1) return;
+    if (v !== undefined && set.indexOf(v) === -1) set.push(v);
+  });
+  return set.length ? set : null;
+}
+
+function parseSchedule(text){
+  const rows = [], errors = [];
+  parseCSV(text).forEach((cells, i) => {
+    const c = cells.map(x => x.trim());
+    if (!c.join('').trim()) return;
+    if (c[0].charAt(0) === '#') return;
+    if (/^start$/i.test(c[0])) return;                  // header row
+    const start = parseTime(c[0]);
+    if (start === null){ errors.push('Line ' + (i+1) + ': can\u2019t read the time \u201c' + c[0] + '\u201d'); return; }
+    const name = c[2] || '';
+    if (!name){ errors.push('Line ' + (i+1) + ': no activity name'); return; }
+    let end = null;
+    if (c[1]){
+      end = parseTime(c[1]);
+      if (end === null) errors.push('Line ' + (i+1) + ': can\u2019t read the end time \u201c' + c[1] + '\u201d');
+    }
+    /* Everything from column six on is days and/or a block label. An unquoted
+       "M, Tu, W, Th" arrives as four separate cells, so gather any cell that
+       reads as weekday names into the day list and take the first that does
+       not as the block. Avoid naming a block M, Tu, W, Th, F or Sa. */
+    let dayText = '', block = '';
+    c.slice(5).forEach(cell => {
+      if (!cell) return;
+      if (parseDays(cell)) dayText += (dayText ? ',' : '') + cell;
+      else if (!block) block = cell;
+    });
+    rows.push({ start, end, name, icon: c[3] || '', detail: c[4] || '',
+                days: parseDays(dayText), block: block.trim().toLowerCase() });
+  });
+  return { rows, errors };
+}
+
+/* Pick out the rows for one weekday and fill in any missing end times. */
+function buildToday(dayIndex, date){
+  const closed = date ? closureFor(date) : null;
+  if (closed){ SCHEDULE = []; return; }
+  const block = date ? String(blockFor(date)).toLowerCase() : '';
+  const rows = RAW_ROWS
+    .filter(r => !r.days || r.days.indexOf(dayIndex) !== -1)
+    .filter(r => !r.block || r.block === block)
+    .slice().sort((a,b) => a.start - b.start);
+  SCHEDULE = rows.map((r, i) => {
+    let end = r.end;
+    if (end === null || end === undefined) end = (i+1 < rows.length) ? rows[i+1].start : r.start + 0.5;
+    if (end <= r.start) end = r.start + 0.25;
+    let note = r.detail;
+    if (/lunch/i.test(r.name)){
+      const menu = date ? lunchFor(date) : '';
+      if (menu) note = menu;
+    }
+    return [r.start, end, r.name, note, r.icon || '\u2B50'];
+  });
+}
+
+let sourceLabel = '', sourceProblem = '', calendarProblem = '', wordProblem = '', lunchProblem = '';
+const FILES = { 'schedule.js':'', 'calendar.js':'', 'lunch.js':'', 'words.js':'' };
+function paintStatus(){
+  const el = document.getElementById('status');
+  const page = (location.pathname.split('/').pop() || 'this page');
+  const missing = Object.keys(FILES).filter(f => !FILES[f]);
+  const probs = [sourceProblem, calendarProblem, wordProblem, lunchProblem].filter(x => x);
+  let txt;
+  if (missing.length)
+    txt = 'NOT FOUND: ' + missing.join(', ') +
+          '  \u2014  every file must sit in the same folder as this page';
+  else
+    txt = 'lunch from lunch.js; everything else is inside this file. '
+        + 'Press the pencil to change anything.';
+  if (typeof anyEdited === 'function' && anyEdited())
+    txt += '  \u00b7  edited on this device';
+  if (probs.length) txt += '  \u00b7  ' + probs.join('  \u00b7  ');
+  el.textContent = page + '  \u2014  ' + txt;
+  el.classList.toggle('warn', missing.length > 0 || probs.length > 0);
+}
+
+function applySchedule(text, label){
+  const r = parseSchedule(text);
+  if (!r.rows.length){
+    sourceProblem = 'no activities found in ' + label + ', using the built-in copy';
+    paintStatus();
+    return false;
+  }
+  RAW_ROWS = r.rows;
+  sourceLabel = label;
+  sourceProblem = r.errors.slice(0,2).join('  \u00b7  ');
+  lastDay = ''; stripBuilt = false;
+  paintStatus();
+  return true;
+}
+
+async function fetchFirst(urls){
+  for (const [url, label] of urls){
+    try {
+      const bust = (url.indexOf('?') === -1 ? '?' : '&') + 't=' + Date.now();
+      const res = await fetch(url + bust, { cache: 'no-store' });
+      if (res.ok) return [await res.text(), label];
+    } catch(e){ /* not reachable */ }
+  }
+  return null;
+}
+
+/* A .csv is only used when the matching .js is missing. Otherwise editing
+   schedule.js on a hosted site would appear to do nothing, because a stale
+   schedule.csv sitting in the same folder would quietly win. A URL you set
+   yourself still takes priority over both. */
+function routes(url, csv, jsKey){
+  const served = location.protocol !== 'file:';
+  if (url) return [[url, 'a link you set']];
+  if (served && !FILES[jsKey]) return [[csv, csv]];
+  return [];
+}
+
+async function loadRemote(){
+  const got = await fetchFirst(routes(SCHEDULE_URL, 'schedule.csv', 'schedule.js'));
+  if (got && applySchedule(got[0], got[1])) FILES['schedule.js'] = got[1];
+
+  const c = await fetchFirst(routes(CALENDAR_URL, 'calendar.csv', 'calendar.js'));
+  if (c){ parseSchoolCalendar(c[0]); lastDay = ''; FILES['calendar.js'] = c[1]; }
+
+  /* Lunch is different from the others: it lives in its own text file that
+     gets edited often, so lunch.txt always wins when it can be reached. */
+  const lunchTries = [];
+  if (LUNCH_URL) lunchTries.push([LUNCH_URL, 'a link you set']);
+  if (location.protocol !== 'file:' && LUNCH_FILE) lunchTries.push([LUNCH_FILE, LUNCH_FILE]);
+  const l = await fetchFirst(lunchTries);
+  if (l){
+    ORIG.lunch = l[0];
+    if (!isEdited('lunch')){ parseLunch(l[0]); lastDay = ''; }
+    FILES['lunch.js'] = l[1]; lunchProblem = '';
+  }
+
+  const w = await fetchFirst(routes(WORDS_URL, 'words.csv', 'words.js'));
+  if (w){
+    const parsed = parseWords(w[0]);
+    if (parsed.length){ ALL_WORDS = parsed; applyFocus(); lastDay = ''; FILES['words.js'] = w[1]; }
+  }
+  paintStatus();
+  tick();
+}
+
+/* ============================================================================
+   3c. SCHOOL YEAR CALENDAR, LUNCH MENU, HELPER OF THE DAY
+   ============================================================================ */
+let YEAR_START = null, YEAR_END = null;
+let CLOSURES = [];                 // {from, to, label}
+let CYCLE = [], CYCLE_START = null, DAY_PINS = {};
+let LUNCH_BY_DATE = {}, LUNCH_BY_WEEKDAY = {}, LUNCH_DEFAULT = '';
+let ROSTER = [], HELPER_LABEL = 'Helper today';
+
+const key = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') +
+                 '-' + String(d.getDate()).padStart(2,'0');
+
+function parseDate(s){
+  const m = String(s).trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (!m) return null;
+  const d = new Date(+m[1], +m[2]-1, +m[3]);
+  return isNaN(d) ? null : d;
+}
+
+function parseSchoolCalendar(text){
+  const errors = [];
+  YEAR_START = YEAR_END = null; CLOSURES = []; CYCLE = []; CYCLE_START = null; DAY_PINS = {};
+  parseCSV(text).forEach((cells, i) => {
+    const c = cells.map(x => x.trim());
+    if (!c.join('').trim() || c[0].charAt(0) === '#') return;
+    const k = c[0].toLowerCase();
+    if (k === 'first day' || k === 'last day'){
+      const d = parseDate(c[1]);
+      if (!d){ errors.push('Line ' + (i+1) + ': can\u2019t read the date \u201c' + c[1] + '\u201d'); return; }
+      if (k === 'first day') YEAR_START = d; else YEAR_END = d;
+    } else if (k === 'no school'){
+      const parts = String(c[1] || '').split(/\s+to\s+/i);
+      const from = parseDate(parts[0]);
+      const to = parts[1] ? parseDate(parts[1]) : from;
+      if (!from || !to){ errors.push('Line ' + (i+1) + ': can\u2019t read the date \u201c' + c[1] + '\u201d'); return; }
+      CLOSURES.push({ from, to, label: c[2] || 'No school' });
+    } else if (k === 'cycle'){
+      CYCLE = c.slice(1).filter(x => x);
+    } else if (k === 'cycle start' || k === 'cycle starts'){
+      CYCLE_START = parseDate(c[1]);
+      if (!CYCLE_START) errors.push('Line ' + (i+1) + ': can\u2019t read the date \u201c' + c[1] + '\u201d');
+    } else if (k === 'day'){
+      const d = parseDate(c[1]);
+      if (d && c[2]) DAY_PINS[key(d)] = c[2].trim();
+      else errors.push('Line ' + (i+1) + ': needs a date and a rotation label');
+    } else {
+      errors.push('Line ' + (i+1) + ': don\u2019t know what \u201c' + c[0] + '\u201d means');
+    }
+  });
+  return errors;
+}
+
+/* Why is there no school? Returns a label, or null if school is on. */
+function closureFor(d){
+  if (d.getDay() === 0 || d.getDay() === 6) return 'Weekend';
+  if (YEAR_START && d < YEAR_START) return 'Summer break';
+  if (YEAR_END && d > YEAR_END) return 'Summer break';
+  const t = d.getTime();
+  for (const c of CLOSURES){
+    if (t >= c.from.getTime() && t <= c.to.getTime() + 82800000) return c.label;
+  }
+  return null;
+}
+const isSchoolDay = d => closureFor(d) === null;
+
+function countSchoolDays(from, to){
+  let n = 0;
+  const d = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+  const stop = to.getTime();
+  let guard = 0;
+  while (d.getTime() <= stop && guard++ < 1000){
+    if (isSchoolDay(d)) n++;
+    d.setDate(d.getDate() + 1);
+  }
+  return n;
+}
+
+/* Which day of the block rotation. Days off are skipped, so a Monday holiday
+   does not flip the whole rest of the year. */
+function blockFor(d){
+  if (DAY_PINS[key(d)]) return DAY_PINS[key(d)];
+  if (!CYCLE.length || !CYCLE_START || !isSchoolDay(d)) return '';
+  if (d < CYCLE_START) return '';
+  const n = countSchoolDays(CYCLE_START, d);
+  return n > 0 ? CYCLE[(n - 1) % CYCLE.length] : '';
+}
+
+function parseLunch(text){
+  LUNCH_BY_DATE = {}; LUNCH_BY_WEEKDAY = {}; LUNCH_DEFAULT = '';
+  parseCSV(text).forEach(cells => {
+    const c = cells.map(x => x.trim());
+    if (!c.join('').trim() || c[0].charAt(0) === '#') return;
+    const menu = c.slice(1).filter(x => x).join(', ');
+    if (!menu) return;
+    const k = c[0].toLowerCase();
+    if (k === 'default'){ LUNCH_DEFAULT = menu; return; }
+    const d = parseDate(c[0]);
+    if (d){ LUNCH_BY_DATE[key(d)] = menu; return; }
+    const wd = DAYMAP[k];
+    if (wd !== undefined && wd >= 0) LUNCH_BY_WEEKDAY[wd] = menu;
+  });
+}
+function lunchFor(d){
+  return LUNCH_BY_DATE[key(d)] || LUNCH_BY_WEEKDAY[d.getDay()] || LUNCH_DEFAULT || '';
+}
+
+/* A fair turn, not a coin flip: everyone gets a day before anyone repeats.
+   The order is reshuffled each time round so it is not the same queue twice. */
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function shuffled(list, seed){
+  const a = list.slice(), rnd = mulberry32(seed + 1);
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(rnd() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function helperFor(d){
+  if (!ROSTER.length || !isSchoolDay(d)) return '';
+  const base = YEAR_START && d >= YEAR_START ? YEAR_START : new Date(d.getFullYear(), 0, 1);
+  const n = countSchoolDays(base, d);
+  if (n <= 0) return '';
+  const i = n - 1;
+  return shuffled(ROSTER, Math.floor(i / ROSTER.length))[i % ROSTER.length];
+}
+
+/* ============================================================================
+   4. FIRST / THEN, TIMER, VISUAL SCHEDULE
+   ============================================================================ */
+let stripBuilt = false, primedFor = -1, primesFired = {}, lastDay = '';
+
+function buildStrip(){
+  const strip = document.getElementById('strip');
+  strip.innerHTML = '';
+  SCHEDULE.forEach(([start,,name,,icon], i) => {
+    const s = document.createElement('div');
+    s.className = 'slot'; s.dataset.i = i;
+    const tm = document.createElement('span'); tm.className = 's-time'; tm.textContent = fmt(start);
+    const ic = document.createElement('span'); ic.className = 's-icon'; ic.setAttribute('aria-hidden','true');
+    setIcon(ic, icon);
+    const nm = document.createElement('span'); nm.className = 's-name'; nm.textContent = name;
+    s.append(tm, ic, nm);
+    if (/lunch/i.test(name)){ s.classList.add('tappable'); s.addEventListener('click', openLunch); }
+    strip.appendChild(s);
+  });
+  stripBuilt = true;
+}
+
+function tick(){
+  const now = new Date();
+  const nowT = now.getHours() + now.getMinutes()/60 + now.getSeconds()/3600;
+  const todayKey = key(now);
+  if (todayKey !== lastDay){
+    lastDay = todayKey;
+    buildToday(now.getDay(), now);
+    stripBuilt = false;
+
+    const bl = blockFor(now);
+    const dt = document.getElementById('daytype');
+    dt.textContent = bl ? (/^[a-z0-9]$/i.test(bl) ? bl + ' day' : bl) : '';
+    dt.classList.toggle('on', !!bl);
+
+    const who = helperFor(now);
+    const hp = document.getElementById('helper');
+    hp.innerHTML = who ? HELPER_LABEL + ' <b>' + who + '</b>' : '';
+    hp.classList.toggle('on', !!who);
+
+    renderWord(now);
+
+    const menu = isSchoolDay(now) ? lunchFor(now) : '';
+    const lc = document.getElementById('lunchChip');
+    lc.innerHTML = menu ? '<span>\u{1F37D}\u{FE0F}</span><span>' + menu + '</span>' : '';
+    lc.classList.toggle('on', !!menu);
+  }
+  const schoolDay = SCHEDULE.length > 0;
+
+  // clock + date
+  document.getElementById('clock').textContent = fmt(now.getHours() + now.getMinutes()/60) + ' ' + ampm(nowT);
+  document.getElementById('weekday').textContent = DAYS[now.getDay()];
+  document.getElementById('datenum').textContent = MONTHS[now.getMonth()] + ' ' + now.getDate();
+  renderCalendar(now);
+
+  if (!stripBuilt) buildStrip();
+
+  // which activity
+  let cur = -1, gapNext = -1;
+  for (let i = 0; i < SCHEDULE.length; i++){
+    if (nowT >= SCHEDULE[i][0] && nowT < SCHEDULE[i][1]){ cur = i; break; }
+  }
+  const beforeSchool = schoolDay && nowT < SCHEDULE[0][0];
+  const afterSchool  = schoolDay && nowT >= SCHEDULE[SCHEDULE.length-1][1];
+
+  const nowCard = document.getElementById('nowCard');
+  const thenCard = document.getElementById('thenCard');
+  const timer = document.getElementById('timer');
+  nowCard.classList.remove('p2','p1','p30');
+
+  const show = (which, item, label, detail) => {
+    document.getElementById(which + 'Name').textContent = item ? item[2] : '';
+    document.getElementById(which + 'Detail').textContent = detail !== undefined ? detail : (item ? item[3] : '');
+    setIcon(document.getElementById(which + 'Icon'), item ? item[4] : '');
+    if (label !== undefined && which === 'now') document.getElementById('nowLabel').textContent = label;
+  };
+
+  if (!schoolDay){
+    show('now', null, 'Today'); 
+    document.getElementById('nowName').textContent = 'No school';
+    const why = closureFor(now);
+    document.getElementById('nowDetail').textContent =
+      (why && why !== 'Weekend') ? why : '';
+    setIcon(document.getElementById('nowIcon'), "\u{1F3E1}");
+    thenCard.parentNode.classList.add('solo');
+    timer.classList.add('hide');
+  } else if (beforeSchool){
+    thenCard.parentNode.classList.remove('solo');
+    show('now', SCHEDULE[0], 'Soon', 'Starts at ' + fmt(SCHEDULE[0][0]) + ' ' + ampm(SCHEDULE[0][0]));
+    show('then', SCHEDULE[1]);
+    timer.classList.add('hide');
+  } else if (afterSchool){
+    show('now', null, 'Today');
+    document.getElementById('nowName').textContent = 'All done';
+    document.getElementById('nowDetail').textContent = 'See you tomorrow';
+    setIcon(document.getElementById('nowIcon'), "\u{2B50}");
+    thenCard.parentNode.classList.add('solo');
+    timer.classList.add('hide');
+  } else if (cur === -1){
+    // sitting in a gap between two activities: show what is coming, not "all done"
+    gapNext = SCHEDULE.findIndex(x => x[0] > nowT);
+    const up = SCHEDULE[gapNext];
+    thenCard.parentNode.classList.remove('solo');
+    show('now', up, 'Next', 'Starts at ' + fmt(up[0]) + ' ' + ampm(up[0]));
+    if (gapNext + 1 < SCHEDULE.length) show('then', SCHEDULE[gapNext + 1]);
+    else {
+      document.getElementById('thenName').textContent = 'Go home';
+      document.getElementById('thenDetail').textContent = '';
+      setIcon(document.getElementById('thenIcon'), "\u{1F3E1}");
+    }
+    timer.classList.add('hide');
+  } else {
+    thenCard.parentNode.classList.remove('solo');
+    const [s, e] = SCHEDULE[cur];
+    show('now', SCHEDULE[cur], LABEL_NOW);
+    document.getElementById('nowLabel').textContent = LABEL_NOW;
+    if (cur + 1 < SCHEDULE.length) show('then', SCHEDULE[cur+1]);
+    else {
+      document.getElementById('thenName').textContent = 'Go home';
+      document.getElementById('thenDetail').textContent = '';
+      setIcon(document.getElementById('thenIcon'), "\u{1F3E1}");
+    }
+
+    // countdown
+    timer.classList.remove('hide');
+    const total = (e - s) * 3600, gone = (nowT - s) * 3600;
+    const remain = Math.max(0, Math.round(total - gone));
+    document.getElementById('bar').style.width = Math.min(100, (gone/total)*100).toFixed(2) + '%';
+
+    const leftEl = document.getElementById('left');
+    if (remain > 90) leftEl.textContent = Math.ceil(remain/60) + ' minutes left';
+    else if (remain > 60) leftEl.textContent = '2 minutes left';
+    else if (remain > 30) leftEl.textContent = '1 minute left';
+    else if (remain > 0)  leftEl.textContent = '30 seconds left';
+    else leftEl.textContent = 'Time to switch';
+
+    if (remain <= 30) nowCard.classList.add('p30');
+    else if (remain <= 60) nowCard.classList.add('p1');
+    else if (remain <= 120) nowCard.classList.add('p2');
+
+    // priming chime, once per threshold per activity
+    if (primedFor !== cur){ primedFor = cur; primesFired = {}; }
+    PRIME.forEach(p => {
+      if (remain <= p && remain > p - 2 && !primesFired[p]){
+        primesFired[p] = true;
+        chime(p);
+      }
+    });
+  }
+
+  document.getElementById('strip').classList.toggle('empty', !schoolDay);
+
+  // visual schedule states
+  document.querySelectorAll('.slot').forEach((el, i) => {
+    el.className = 'slot';
+    if (!schoolDay) return;
+    if (i === cur) el.classList.add('now');
+    else if (i === (cur >= 0 ? cur + 1 : (beforeSchool ? 0 : gapNext))) el.classList.add('next');
+    else if (nowT >= SCHEDULE[i][1]) el.classList.add('done');
+  });
+}
+
+/* ============================================================================
+   4b. WORD OF THE DAY
+   ============================================================================ */
+let WORDS = [], ALL_WORDS = [], WORD_FOCUS = [], BANK_SIZE = 6, wordToday = null, bankSolved = false, practiceSeed = 0;
+
+const BUILT_IN_WORDS = `
+word, picture, sentence, group
+more, \u2795, I want more., core
+help, \u{1F64B}, I need help., core
+break, \u{1F9E9}, I need a break., core
+stop, \u{1F6D1}, Please stop., core
+yes, \u{1F44D}, Yes please., core
+no, \u{1F44E}, No thank you., core
+`;
+
+function parseWords(text){
+  const out = [];
+  parseCSV(text).forEach(cells => {
+    const c = cells.map(x => x.trim());
+    if (!c.join('').trim() || c[0].charAt(0) === '#') return;
+    if (/^word$/i.test(c[0])) return;
+    if (!c[0]) return;
+    out.push({ word: c[0], icon: c[1] || '', sentence: c[2] || '', group: (c[3] || 'all').toLowerCase() });
+  });
+  return out;
+}
+
+/* One word per school day, working through the list in a shuffled order that
+   changes each time round. Stable for the whole day. */
+function wordFor(d){
+  if (!WORDS.length) return null;
+  const base = YEAR_START && d >= YEAR_START ? YEAR_START : new Date(d.getFullYear(), 0, 1);
+  let n = countSchoolDays(base, d);
+  if (n <= 0) n = 1;
+  const i = (n - 1) + practiceSeed;
+  return shuffled(WORDS, Math.floor(i / WORDS.length))[i % WORDS.length];
+}
+
+/* Fill the array with words from the same group so the choice is a real one.
+   Positions are fixed for the day so they do not move under the student. */
+function buildBank(target, seed){
+  const size = Math.max(2, Math.min(8, BANK_SIZE));
+  const same = WORDS.filter(w => w.group === target.group && w.word !== target.word);
+  const rest = WORDS.filter(w => w.group !== target.group && w.word !== target.word);
+  const pool = shuffled(same, seed).concat(shuffled(rest, seed + 7));
+  const picked = [target].concat(pool.slice(0, size - 1));
+  return shuffled(picked, seed + 13);
+}
+
+function speak(text){
+  if (!soundOn || !text || !('speechSynthesis' in window)) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.8; u.pitch = 1;
+    speechSynthesis.speak(u);
+  } catch(e){}
+}
+
+function setPic(el, icon){
+  if (typeof icon === 'string' && icon.slice(0,4) === 'img:'){
+    el.innerHTML = ''; const im = document.createElement('img'); im.src = icon.slice(4); im.alt = '';
+    el.appendChild(im);
+  } else el.textContent = icon;
+}
+
+function renderWord(d){
+  const w = wordFor(d);
+  wordToday = w; bankSolved = false;
+  const bank = document.getElementById('bank');
+  if (!w){ bank.innerHTML = ''; return; }
+
+  const wIcon = document.getElementById('wIcon');
+  wIcon.hidden = !w.icon;
+  if (w.icon) setPic(wIcon, w.icon);
+  document.getElementById('wordCard').classList.toggle('nopic', !w.icon);
+  document.getElementById('wWord').textContent = w.word;
+  document.getElementById('wSent').textContent = w.sentence;
+  const prompt = document.getElementById('wPrompt');
+  prompt.textContent = 'Find \u201C' + w.word + '\u201D.';
+  prompt.classList.remove('good');
+
+  const seed = Math.abs(hashStr(w.word)) + practiceSeed;
+  const list = buildBank(w, seed);
+  bank.style.setProperty('--cols', list.length <= 2 ? list.length : list.length <= 4 ? 2 : list.length <= 6 ? 3 : 4);
+  bank.innerHTML = '';
+  list.forEach(item => {
+    const b = document.createElement('button');
+    b.className = 'bword' + (item.icon ? '' : ' textonly');
+    if (item.icon){
+      const pic = document.createElement('span'); pic.className = 'b-pic';
+      pic.setAttribute('aria-hidden','true'); setPic(pic, item.icon);
+      b.appendChild(pic);
+    }
+    const lab = document.createElement('span'); lab.textContent = item.word;
+    b.appendChild(lab);
+    b.addEventListener('click', () => pickWord(item, b));
+    bank.appendChild(b);
+  });
+}
+
+/* WORD_FOCUS narrows the rotation to certain groups. Unknown group names are
+   ignored rather than emptying the list. */
+function applyFocus(){
+  if (!WORD_FOCUS.length){ WORDS = ALL_WORDS.slice(); return; }
+  const picked = ALL_WORDS.filter(w => WORD_FOCUS.indexOf(w.group) !== -1);
+  WORDS = picked.length ? picked : ALL_WORDS.slice();
+  if (!picked.length) wordProblem = 'words.js: WORD_FOCUS matched no groups, using them all';
+}
+
+function hashStr(s){
+  let h = 0;
+  for (let i = 0; i < s.length; i++){ h = (h * 31 + s.charCodeAt(i)) | 0; }
+  return h;
+}
+
+function pickWord(item, btn){
+  if (!wordToday) return;
+  if (item.word === wordToday.word){
+    document.querySelectorAll('.bword').forEach(x => x.classList.remove('miss','hint'));
+    btn.classList.add('right');
+    bankSolved = true;
+    const p = document.getElementById('wPrompt');
+    p.textContent = 'Yes! ' + (wordToday.sentence || wordToday.word);
+    p.classList.add('good');
+    speak(wordToday.sentence || wordToday.word);
+  } else {
+    speak(item.word);
+    btn.classList.add('miss');
+    setTimeout(() => btn.classList.remove('miss'), 900);
+    // least-to-most: after a miss, show where the answer is
+    document.querySelectorAll('.bword').forEach(x => {
+      if (x.querySelector('span:last-child').textContent === wordToday.word) x.classList.add('hint');
+    });
+  }
+}
+
+/* the lunch menu, opened out big enough to read from the back of the room */
+let lunchTimer = null;
+function openLunch(){
+  const d = new Date();
+  const menu = isSchoolDay(d) ? lunchFor(d) : '';
+  if (!menu) return;
+  const ul = document.getElementById('lunchList');
+  ul.innerHTML = '';
+  menu.split(',').map(x => x.trim()).filter(x => x).forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = item;
+    ul.appendChild(li);
+  });
+  const n = ul.children.length;
+  ul.classList.toggle('two', n > 5);
+  ul.classList.toggle('dense', n > 5);
+  document.getElementById('lunchModal').hidden = false;
+  speak('Lunch today. ' + menu);
+  clearTimeout(lunchTimer);
+  lunchTimer = setTimeout(closeLunch, 30000);   // closes itself if nobody does
+}
+function closeLunch(){
+  document.getElementById('lunchModal').hidden = true;
+  clearTimeout(lunchTimer);
+}
+
+/* tabs */
+function showView(which){
+  const wea = which === 'weather';
+  document.getElementById('viewWeather').hidden = !wea;
+  document.getElementById('viewWord').hidden = wea;
+  document.getElementById('tabWeather').classList.toggle('on', wea);
+  document.getElementById('tabWord').classList.toggle('on', !wea);
+  document.getElementById('tabWeather').setAttribute('aria-selected', String(wea));
+  document.getElementById('tabWord').setAttribute('aria-selected', String(!wea));
+  document.getElementById('newWordBtn').hidden = wea;
+  if (wea) requestAnimationFrame(resizeCanvas);
+}
+
+/* ============================================================================
+   5. SOUND
+   ============================================================================ */
+let audio = null, soundOn = true;
+function ac(){
+  if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+  if (audio.state === 'suspended') audio.resume();
+  return audio;
+}
+function noise(a, sec){
+  const buf = a.createBuffer(1, Math.ceil(a.sampleRate*sec), a.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+  const s = a.createBufferSource(); s.buffer = buf; return s;
+}
+function tone(a,f,at,dur,peak,type){
+  const o=a.createOscillator(), g=a.createGain();
+  o.type=type||'sine'; o.frequency.value=f;
+  g.gain.setValueAtTime(0.0001,a.currentTime+at);
+  g.gain.exponentialRampToValueAtTime(peak,a.currentTime+at+0.03);
+  g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+at+dur);
+  o.connect(g).connect(a.destination);
+  o.start(a.currentTime+at); o.stop(a.currentTime+at+dur+0.05);
+}
+
+/* soft, low, non-startling — one note for 2 min, two for 1 min, three for 30 sec */
+function chime(seconds){
+  if (!soundOn) return;
+  try {
+    const a = ac();
+    const n = seconds === 120 ? 1 : seconds === 60 ? 2 : 3;
+    for (let i = 0; i < n; i++) tone(a, 587.33, i*0.28, 0.5, 0.07, 'sine');
+  } catch(e){}
+}
+
+const SOUNDS = {
+  sunny(a){ [523.25,659.25,783.99].forEach((f,i)=>tone(a,f,i*0.10,0.5,0.11,'triangle')); },
+  cloudy(a){ [196,246.94].forEach((f,i)=>tone(a,f,i*0.05,1.1,0.08,'sine')); },
+  rainy(a){
+    const s=noise(a,1.5), f=a.createBiquadFilter(), g=a.createGain();
+    f.type='lowpass'; f.frequency.value=1100;
+    g.gain.setValueAtTime(0.0001,a.currentTime);
+    g.gain.linearRampToValueAtTime(0.15,a.currentTime+0.3);
+    g.gain.linearRampToValueAtTime(0.0001,a.currentTime+1.45);
+    s.connect(f).connect(g).connect(a.destination); s.start();
+  },
+  windy(a){
+    const s=noise(a,1.9), f=a.createBiquadFilter(), g=a.createGain();
+    f.type='bandpass'; f.Q.value=1.2;
+    f.frequency.setValueAtTime(320,a.currentTime);
+    f.frequency.linearRampToValueAtTime(820,a.currentTime+0.9);
+    f.frequency.linearRampToValueAtTime(360,a.currentTime+1.8);
+    g.gain.setValueAtTime(0.0001,a.currentTime);
+    g.gain.linearRampToValueAtTime(0.16,a.currentTime+0.45);
+    g.gain.linearRampToValueAtTime(0.0001,a.currentTime+1.8);
+    s.connect(f).connect(g).connect(a.destination); s.start();
+  },
+  snowy(a){ [1318.51,1567.98,1760].forEach((f,i)=>tone(a,f,i*0.18,0.45,0.055,'sine')); },
+  stormy(a){
+    const r=noise(a,2.0), lf=a.createBiquadFilter(), lg=a.createGain();
+    lf.type='lowpass'; lf.frequency.value=160;
+    lg.gain.setValueAtTime(0.0001,a.currentTime);
+    lg.gain.linearRampToValueAtTime(0.26,a.currentTime+0.5);
+    lg.gain.linearRampToValueAtTime(0.0001,a.currentTime+1.95);
+    r.connect(lf).connect(lg).connect(a.destination); r.start();
+  }
+};
+function play(k){ if (!soundOn) return; try { SOUNDS[k](ac()); } catch(e){} }
+
+const ICON_ON  = '<path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a6.8 6.8 0 0 1 0 13.4v2.1a8.9 8.9 0 0 0 0-17.6z"/>';
+const ICON_OFF = '<path d="M4 9v6h4l5 4V5L8 9H4zm15.5 3 2.3-2.3-1.4-1.4L18 10.6l-2.3-2.3-1.4 1.4 2.3 2.3-2.3 2.3 1.4 1.4 2.3-2.3 2.4 2.3 1.4-1.4-2.3-2.3z"/>';
+const sBtn = document.getElementById('soundBtn');
+function paintSound(){
+  document.getElementById('soundIcon').innerHTML = soundOn ? ICON_ON : ICON_OFF;
+  document.getElementById('soundLabel').textContent = soundOn ? 'Sound on' : 'Sound off';
+  sBtn.setAttribute('aria-pressed', String(!soundOn));
+}
+sBtn.addEventListener('click', () => { soundOn = !soundOn; paintSound(); });
+paintSound();
+
+/* ============================================================================
+   6. WEATHER BUTTONS
+   ============================================================================ */
+const RAYS = (() => {
+  let s = '';
+  for (let i=0;i<8;i++){
+    const a = i*Math.PI/4;
+    s += `<line x1="${(36+Math.cos(a)*20).toFixed(1)}" y1="${(36+Math.sin(a)*20).toFixed(1)}" x2="${(36+Math.cos(a)*29).toFixed(1)}" y2="${(36+Math.sin(a)*29).toFixed(1)}"/>`;
+  }
+  return s;
+})();
+const CLOUD = '<circle cx="24" cy="36" r="10"/><circle cx="37" cy="28" r="13"/><circle cx="50" cy="36" r="10"/><rect x="24" y="36" width="26" height="10" rx="5"/>';
+const ICONS = {
+  sunny:  `<g fill="#E8901B"><circle cx="36" cy="36" r="13"/></g><g stroke="#E8901B" stroke-width="5" stroke-linecap="round">${RAYS}</g>`,
+  cloudy: `<g fill="#7E8C9B">${CLOUD}</g>`,
+  rainy:  `<g fill="#5F7F98">${CLOUD}</g><g stroke="#2F7FB5" stroke-width="5" stroke-linecap="round"><line x1="27" y1="52" x2="24" y2="62"/><line x1="38" y1="52" x2="35" y2="62"/><line x1="49" y1="52" x2="46" y2="62"/></g>`,
+  windy:  `<g stroke="#2E8B62" stroke-width="6" stroke-linecap="round" fill="none"><path d="M12 26h30a7 7 0 1 0-7-7"/><path d="M12 40h38a7 7 0 1 1-7 7"/><path d="M12 54h22"/></g>`,
+  snowy:  `<g fill="#8FA3B8">${CLOUD}</g><g fill="#3E6E9E"><circle cx="25" cy="57" r="4"/><circle cx="37" cy="62" r="4"/><circle cx="49" cy="57" r="4"/></g>`,
+  stormy: `<g fill="#6B5F8C">${CLOUD}</g><g fill="#E8A11B"><polygon points="40,48 26,66 34,66 30,72 46,54 37,54 43,48"/></g>`
+};
+const LABELS = { sunny:"Sunny", cloudy:"Cloudy", rainy:"Rainy", windy:"Windy", snowy:"Snowy", stormy:"Stormy" };
+const SENTENCE = {
+  sunny:"It is sunny.", cloudy:"It is cloudy.", rainy:"It is rainy.",
+  windy:"It is windy.", snowy:"It is snowy.", stormy:"It is stormy."
+};
+
+const chips = document.getElementById('chips');
+Object.keys(ICONS).forEach(kind => {
+  const b = document.createElement('button');
+  b.className = 'chip chip-' + kind;
+  b.setAttribute('aria-pressed','false');
+  b.innerHTML = `<svg viewBox="0 0 72 72" aria-hidden="true">${ICONS[kind]}</svg><span>${LABELS[kind]}</span>`;
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed','true');
+    b.classList.add('press'); setTimeout(()=>b.classList.remove('press'),140);
+    document.getElementById('caption').textContent = SENTENCE[kind];
+    play(kind); setScene(kind);
+  });
+  chips.appendChild(b);
+});
+
+/* ============================================================================
+   7. SKY
+   Deliberately calm: slow drift, no strobe, no sudden full-screen flash.
+   ============================================================================ */
+const canvas = document.getElementById('sky');
+const cx2 = canvas.getContext('2d');
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let W=0, H=0, mode='sunny', t=0;
+let clouds=[], drops=[], flakes=[], gusts=[], glow=0, nextGlow=999;
+
+const SKIES = {
+  sunny:['#5FB8EC','#CDEBFF'], cloudy:['#93A5B6','#D8E1E9'], rainy:['#6E869F','#A9BAC8'],
+  windy:['#6FBBE2','#C9E8F6'], snowy:['#8CA3BA','#E4EDF6'], stormy:['#3B495C','#68768A']
+};
+
+function resizeCanvas(){
+  W = canvas.offsetWidth; H = canvas.offsetHeight;
+  if (!W || !H) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(W*dpr); canvas.height = Math.round(H*dpr);
+  cx2.setTransform(dpr,0,0,dpr,0,0);
+  build();
+  if (reduce) draw(0);
+}
+
+function build(){
+  const n = (mode==='stormy'||mode==='rainy') ? 4 : (mode==='cloudy'||mode==='snowy') ? 5 : 3;
+  clouds = [];
+  for (let i=0;i<n;i++) clouds.push({
+    x:Math.random()*W, y:H*(0.14+Math.random()*0.32),
+    s:0.5+Math.random()*0.6, v:(mode==='windy'?26:7)*(0.6+Math.random()*0.8)
+  });
+  drops = [];
+  const dn = mode==='stormy' ? 95 : mode==='rainy' ? 70 : 0;
+  for (let i=0;i<dn;i++) drops.push({x:Math.random()*W,y:Math.random()*H,l:8+Math.random()*11,v:300+Math.random()*180});
+  flakes = [];
+  if (mode==='snowy') for (let i=0;i<55;i++)
+    flakes.push({x:Math.random()*W,y:Math.random()*H,r:1.6+Math.random()*2.6,v:20+Math.random()*28,p:Math.random()*6.3});
+  gusts = [];
+  if (mode==='windy') for (let i=0;i<7;i++)
+    gusts.push({x:Math.random()*W,y:H*(0.2+Math.random()*0.6),w:40+Math.random()*80,v:120+Math.random()*140});
+  nextGlow = mode==='stormy' ? 2.5 : 9999;
+  glow = 0;
+}
+function setScene(k){ mode = k; build(); if (reduce) draw(0); }
+
+function cloudShape(x,y,s,fill){
+  cx2.fillStyle = fill;
+  cx2.beginPath();
+  cx2.arc(x-26*s,y,17*s,0,6.3);
+  cx2.arc(x,y-13*s,25*s,0,6.3);
+  cx2.arc(x+28*s,y,19*s,0,6.3);
+  cx2.rect(x-26*s,y-1*s,54*s,18*s);
+  cx2.fill();
+}
+
+function draw(dt){
+  if (!W || !H) return;
+  const [top,bot] = SKIES[mode];
+  const g = cx2.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,top); g.addColorStop(1,bot);
+  cx2.fillStyle = g; cx2.fillRect(0,0,W,H);
+
+  if (mode==='sunny' || mode==='windy'){
+    const sx=W*0.78, sy=H*0.25, r=Math.min(W,H)*0.14;
+    cx2.save(); cx2.translate(sx,sy); cx2.rotate(t*0.18);
+    cx2.strokeStyle='rgba(255,214,84,.8)'; cx2.lineWidth=Math.max(3,r*0.15); cx2.lineCap='round';
+    for (let i=0;i<10;i++){
+      const a=i*Math.PI/5;
+      cx2.beginPath();
+      cx2.moveTo(Math.cos(a)*r*1.35,Math.sin(a)*r*1.35);
+      cx2.lineTo(Math.cos(a)*r*1.8,Math.sin(a)*r*1.8);
+      cx2.stroke();
+    }
+    cx2.restore();
+    const gl = cx2.createRadialGradient(sx,sy,r*0.4,sx,sy,r*1.5);
+    gl.addColorStop(0,'rgba(255,224,120,.85)'); gl.addColorStop(1,'rgba(255,224,120,0)');
+    cx2.fillStyle=gl; cx2.beginPath(); cx2.arc(sx,sy,r*1.5,0,6.3); cx2.fill();
+    cx2.fillStyle='#FFD34E'; cx2.beginPath(); cx2.arc(sx,sy,r,0,6.3); cx2.fill();
+  }
+
+  const gy = H*0.80;
+  cx2.fillStyle = mode==='snowy' ? '#F3F8FC' : mode==='stormy' ? '#37604A' : '#4EA96E';
+  cx2.beginPath();
+  cx2.moveTo(0,H); cx2.lineTo(0,gy);
+  cx2.quadraticCurveTo(W*0.3, gy-H*0.09, W*0.6, gy-H*0.01);
+  cx2.quadraticCurveTo(W*0.85, gy+H*0.04, W, gy-H*0.035);
+  cx2.lineTo(W,H); cx2.closePath(); cx2.fill();
+
+  const cf = mode==='stormy' ? 'rgba(72,80,98,.95)'
+           : mode==='rainy'  ? 'rgba(126,140,156,.95)'
+           : mode==='cloudy' ? 'rgba(246,249,252,.95)' : 'rgba(255,255,255,.92)';
+  clouds.forEach(c => {
+    c.x += c.v*dt;
+    if (c.x-70 > W) c.x = -70;
+    cloudShape(c.x, c.y, c.s*Math.min(1.5, W/420), cf);
+  });
+
+  if (drops.length){
+    cx2.strokeStyle='rgba(226,242,255,.7)'; cx2.lineWidth=2; cx2.lineCap='round';
+    cx2.beginPath();
+    drops.forEach(d => {
+      d.y += d.v*dt; d.x += 26*dt;
+      if (d.y > H){ d.y = -10; d.x = Math.random()*W; }
+      cx2.moveTo(d.x,d.y); cx2.lineTo(d.x-3,d.y+d.l);
+    });
+    cx2.stroke();
+  }
+
+  if (flakes.length){
+    cx2.fillStyle='rgba(255,255,255,.92)';
+    flakes.forEach(f => {
+      f.y += f.v*dt; f.p += dt; f.x += Math.sin(f.p)*14*dt;
+      if (f.y > H){ f.y = -6; f.x = Math.random()*W; }
+      cx2.beginPath(); cx2.arc(f.x,f.y,f.r,0,6.3); cx2.fill();
+    });
+  }
+
+  if (gusts.length){
+    cx2.strokeStyle='rgba(255,255,255,.55)'; cx2.lineWidth=3; cx2.lineCap='round';
+    gusts.forEach(s => {
+      s.x += s.v*dt;
+      if (s.x-s.w > W){ s.x = -s.w; s.y = H*(0.2+Math.random()*0.6); }
+      cx2.beginPath();
+      cx2.moveTo(s.x,s.y);
+      cx2.quadraticCurveTo(s.x+s.w*0.5, s.y-9, s.x+s.w, s.y);
+      cx2.stroke();
+    });
+  }
+
+  // storm: a slow brightening behind the clouds, never a strobe
+  if (mode==='stormy' && !reduce){
+    nextGlow -= dt;
+    if (nextGlow <= 0){ glow = 1; nextGlow = 5 + Math.random()*5; }
+    if (glow > 0){
+      const gr = cx2.createRadialGradient(W*0.4,H*0.2,0,W*0.4,H*0.2,H*0.9);
+      gr.addColorStop(0,'rgba(255,250,225,'+(glow*0.22).toFixed(3)+')');
+      gr.addColorStop(1,'rgba(255,250,225,0)');
+      cx2.fillStyle = gr; cx2.fillRect(0,0,W,H);
+      glow = Math.max(0, glow - dt*0.9);
+    }
+  }
+}
+
+let last = 0;
+function loop(ts){
+  const dt = last ? Math.min(0.05,(ts-last)/1000) : 0;
+  last = ts; t += dt;
+  draw(dt);
+  requestAnimationFrame(loop);
+}
+
+/* ============================================================================
+   7b. THE EDIT PANEL
+   Everything the board reads is plain text. This lets you change that text on
+   screen instead of opening files. Edits are kept in this browser, so they
+   survive a reload and a restart of the TV, but they belong to this device —
+   use Download (or Copy) to put a change back in the repo for everyone.
+   ============================================================================ */
+const ORIG = {};
+const KEY  = 'classboard:';
+
+function lsGet(k){ try { return localStorage.getItem(KEY + k); } catch(e){ return null; } }
+function lsSet(k, v){ try { localStorage.setItem(KEY + k, v); return true; } catch(e){ return false; } }
+function lsDel(k){ try { localStorage.removeItem(KEY + k); } catch(e){} }
+
+const TABS = [
+  { id:'schedule', label:'Schedule', file:'schedule.txt',
+    help:'One activity per line:  start , end , name , picture , note , days\u00a0\u00a0' +
+         'Leave the end blank and it runs until the next one. Days blank means every day, ' +
+         'or list them like "M, Tu, W, Th". A line starting with # is ignored.' },
+  { id:'lunch', label:'Lunch', file:'lunch.txt',
+    help:'One day per line:  2026-09-08, Chicken katsu, rice, green beans\u00a0\u00a0' +
+         'Everything after the date is the menu. Name a weekday instead of a date for meals ' +
+         'that repeat. The default line is used when nothing matches.' },
+  { id:'words', label:'Words', file:'words.txt',
+    help:'One word per line:  word , picture , sentence , group\u00a0\u00a0' +
+         'Leave the picture blank for sight words so the tile shows the word alone. ' +
+         'The word bank fills with other words from the same group.' },
+  { id:'calendar', label:'School year', file:'calendar.txt',
+    help:'no school, 2026-09-07, Labor Day\u00a0\u00a0 or a range with "to". ' +
+         'Also first day / last day, and cycle + cycle start if your school runs a rotation.' },
+  { id:'roster', label:'Class list', file:'class-list.txt',
+    help:'First names separated by commas. The board gives each student a turn as helper ' +
+         'before anyone repeats. Leave it empty to remove the helper line.' }
+];
+
+let edTab = 'schedule';
+
+function currentText(id){
+  const v = lsGet(id);
+  return v === null ? (ORIG[id] || '') : v;
+}
+function isEdited(id){ return lsGet(id) !== null; }
+function anyEdited(){ return TABS.some(t => isEdited(t.id)); }
+
+/* Push whatever the board should be reading right now into the board. */
+function applyAll(){
+  applySchedule(currentText('schedule'),
+                isEdited('schedule') ? 'your edits' : (FILES['schedule.js'] || 'built-in schedule'));
+
+  calendarProblem = '';
+  const cerr = parseSchoolCalendar(currentText('calendar'));
+  if (cerr.length) calendarProblem = 'school year: ' + cerr[0];
+
+  parseLunch(currentText('lunch'));
+
+  wordProblem = '';
+  const parsed = parseWords(currentText('words'));
+  if (parsed.length) ALL_WORDS = parsed;
+  applyFocus();
+
+  ROSTER = currentText('roster').split(',').map(x => x.trim()).filter(x => x);
+
+  lastDay = ''; stripBuilt = false;
+}
+
+/* What is wrong with this text, in plain language. */
+function checkText(id, txt){
+  if (id === 'schedule'){
+    const r = parseSchedule(txt);
+    if (!r.rows.length) return ['bad', 'No activities found.'];
+    return r.errors.length
+      ? ['bad', r.rows.length + ' activities saved. ' + r.errors.slice(0,3).join('  \u00b7  ')]
+      : ['good', r.rows.length + ' activities saved.'];
+  }
+  if (id === 'calendar'){
+    const e = parseSchoolCalendar(txt);
+    return e.length ? ['bad', e.slice(0,3).join('  \u00b7  ')]
+                    : ['good', CLOSURES.length + ' days off saved.'];
+  }
+  if (id === 'words'){
+    const w = parseWords(txt);
+    return w.length ? ['good', w.length + ' words saved.'] : ['bad', 'No words found.'];
+  }
+  if (id === 'lunch'){
+    const before = Object.keys(LUNCH_BY_DATE).length;
+    return ['good', before + ' dated menus saved.'];
+  }
+  const n = txt.split(',').map(x => x.trim()).filter(x => x).length;
+  return ['good', n + (n === 1 ? ' name saved.' : ' names saved.')];
+}
+
+function edMsg(kind, text){
+  const el = document.getElementById('edMsg');
+  el.textContent = text;
+  el.className = 'ed-msg ' + (kind || '');
+}
+
+function paintTabs(){
+  const box = document.getElementById('edTabs');
+  box.innerHTML = '';
+  TABS.forEach(t => {
+    const b = document.createElement('button');
+    b.className = 'ed-tab' + (t.id === edTab ? ' on' : '') + (isEdited(t.id) ? ' dirty' : '');
+    b.textContent = t.label;
+    b.addEventListener('click', () => { edTab = t.id; paintEditor(); });
+    box.appendChild(b);
+  });
+}
+function paintEditor(){
+  const t = TABS.find(x => x.id === edTab);
+  paintTabs();
+  document.getElementById('edHelp').textContent = t.help;
+  document.getElementById('edText').value = currentText(edTab);
+  edMsg('', isEdited(edTab) ? 'Edited on this device.' : 'Matching the file.');
+}
+
+function openEditor(){
+  document.getElementById('editor').hidden = false;
+  paintEditor();
+}
+function closeEditor(){ document.getElementById('editor').hidden = true; }
+
+document.getElementById('editBtn').addEventListener('click', openEditor);
+document.getElementById('edClose').addEventListener('click', closeEditor);
+
+document.getElementById('edSave').addEventListener('click', () => {
+  const txt = document.getElementById('edText').value;
+  const stored = lsSet(edTab, txt);
+  applyAll(); tick(); renderWord(new Date()); paintStatus(); paintTabs();
+  const [kind, note] = checkText(edTab, txt);
+  edMsg(kind, note + (stored ? '' : '  \u00b7  This browser will not keep it after a reload — use Download.'));
+});
+
+document.getElementById('edRevert').addEventListener('click', () => {
+  lsDel(edTab);
+  applyAll(); tick(); renderWord(new Date()); paintStatus(); paintEditor();
+  edMsg('good', 'Back to the file.');
+});
+
+document.getElementById('edCopy').addEventListener('click', () => {
+  const txt = document.getElementById('edText').value;
+  if (navigator.clipboard) navigator.clipboard.writeText(txt)
+    .then(() => edMsg('good', 'Copied.'))
+    .catch(() => edMsg('bad', 'Could not copy — select the text and copy it by hand.'));
+});
+
+document.getElementById('edDownload').addEventListener('click', () => {
+  const t = TABS.find(x => x.id === edTab);
+  const blob = new Blob([document.getElementById('edText').value], { type:'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = t.file;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  edMsg('good', 'Saved as ' + t.file + '.');
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !document.getElementById('editor').hidden) closeEditor();
+});
+
+/* ============================================================================
+   8. START
+   ============================================================================ */
+document.getElementById('fsBtn').addEventListener('click', () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(()=>{});
+});
+
+FILES['schedule.js'] = typeof window.SCHEDULE_CSV   === 'string' ? 'schedule.js' : '';
+FILES['calendar.js'] = typeof window.SCHOOL_CALENDAR === 'string' ? 'calendar.js' : '';
+FILES['lunch.js']    = typeof window.LUNCH_MENU      === 'string' ? 'lunch.js'    : '';
+FILES['words.js']    = typeof window.WORD_LIST       === 'string' ? 'words.js'    : '';
+
+if (typeof window.SCHOOL_CALENDAR === 'string'){
+  const errs = parseSchoolCalendar(window.SCHOOL_CALENDAR);
+  if (errs.length) calendarProblem = 'calendar.js: ' + errs[0];
+}
+if (typeof window.LUNCH_MENU === 'string') parseLunch(window.LUNCH_MENU);
+ALL_WORDS = parseWords(typeof window.WORD_LIST === 'string' ? window.WORD_LIST : BUILT_IN_WORDS);
+if (typeof window.WORD_BANK_SIZE === 'number') BANK_SIZE = window.WORD_BANK_SIZE;
+if (typeof window.WORD_FOCUS === 'string')
+  WORD_FOCUS = window.WORD_FOCUS.split(',').map(x => x.trim().toLowerCase()).filter(x => x);
+applyFocus();
+if (typeof window.ROSTER === 'string')
+  ROSTER = window.ROSTER.split(',').map(x => x.trim()).filter(x => x);
+if (typeof window.HELPER_LABEL === 'string' && window.HELPER_LABEL.trim())
+  HELPER_LABEL = window.HELPER_LABEL.trim();
+
+ORIG.schedule = typeof window.SCHEDULE_CSV   === 'string' ? window.SCHEDULE_CSV   : BUILT_IN;
+ORIG.calendar = typeof window.SCHOOL_CALENDAR === 'string' ? window.SCHOOL_CALENDAR : '';
+ORIG.lunch    = typeof window.LUNCH_MENU      === 'string' ? window.LUNCH_MENU      : '';
+if (typeof window.LUNCH_MENU !== 'string')
+  lunchProblem = 'lunch.js not found — put it in the same folder as this page';
+ORIG.words    = typeof window.WORD_LIST       === 'string' ? window.WORD_LIST       : BUILT_IN_WORDS;
+ORIG.roster   = typeof window.ROSTER          === 'string' ? window.ROSTER          : '';
+applyAll();
+document.getElementById('lunchChip').addEventListener('click', openLunch);
+document.getElementById('lunchModal').addEventListener('click', closeLunch);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLunch(); });
+
+document.getElementById('tabWeather').addEventListener('click', () => showView('weather'));
+document.getElementById('tabWord').addEventListener('click', () => showView('word'));
+['nowCard','thenCard'].forEach(id => {
+  document.getElementById(id).addEventListener('click', () => {
+    const nm = document.getElementById(id === 'nowCard' ? 'nowName' : 'thenName').textContent;
+    if (/lunch/i.test(nm)) openLunch();
+  });
+});
+document.getElementById('wordCard').addEventListener('click', () => {
+  if (wordToday) speak(wordToday.word + '. ' + wordToday.sentence);
+});
+document.getElementById('newWordBtn').addEventListener('click', () => {
+  practiceSeed++; renderWord(new Date());
+});
+
+tick();
+loadRemote();
+setInterval(loadRemote, 300000);   // pick up edits without a reload
+setInterval(tick, 1000);
+requestAnimationFrame(() => resizeCanvas());
+window.addEventListener('resize', resizeCanvas);
+window.addEventListener('load', resizeCanvas);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(resizeCanvas);
+if (!reduce) requestAnimationFrame(loop);
+</script>
+</body>
+</html>
