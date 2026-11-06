@@ -1,28 +1,197 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Secure or Not? - Hacking Activity</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background-color: #f0f0f0;
-    }
-    input {
-      padding: 5px;
-    }
-    #hiddenPicture {
-      display: none;
-      max-width: 80%;
-    }
-  </style>
-  
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Morning Meeting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1D2E3D; --panel:#FAF8F4; --panel-2:#EDE8DF; --ink:#17222D;
+    --muted:#6B7A88; --teal:#2E8B80; --teal-soft:#D8EDE9; --amber:#DDA02B;
+  }
+  html{ font-size:clamp(13px, 0.6vw + 1.0vh, 26px); }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    font-family:'Nunito','Trebuchet MS','Segoe UI',sans-serif;
+    background:var(--bg);color:var(--ink);overflow:hidden;
+    -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+  }
+  .shell{height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr)}
+
+  .tabs{
+    display:flex;align-items:stretch;gap:.4rem;
+    padding:.5rem 1.4rem .2rem;background:var(--bg);
+  }
+  .tab{
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.35rem;
+    background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);
+    border:none;border-radius:.7rem .7rem 0 0;cursor:pointer;
+    padding:.6rem 1.4rem .7rem;display:flex;align-items:center;gap:.6rem;
+    line-height:1.1;white-space:nowrap;
+    transition:background-color .12s ease,color .12s ease;
+  }
+  .tab .ic{font-size:1.5rem;line-height:1}
+  .tab:hover{background:rgba(255,255,255,.16);color:#fff}
+  .tab[aria-selected="true"]{background:var(--panel);color:var(--ink)}
+  .tab:focus-visible{outline:.18rem solid var(--teal);outline-offset:-.18rem}
+
+  .spacer{flex:1 1 auto}
+  .chrome{
+    background:transparent;color:rgba(255,255,255,.45);border:none;cursor:pointer;
+    padding:.5rem;line-height:0;border-radius:.4rem;align-self:center;
+    opacity:.5;transition:opacity .15s ease;
+  }
+  .chrome:hover,.chrome:focus-visible{opacity:1}
+  .chrome svg{width:1.3rem;height:1.3rem;fill:currentColor}
+
+  .stage{position:relative;min-height:0;background:var(--bg)}
+  .stage iframe{
+    position:absolute;inset:0;width:100%;height:100%;
+    border:none;display:block;background:var(--bg);
+  }
+  .stage iframe[hidden]{display:none}
+
+  @media (max-width:820px), (orientation:portrait){
+    .tabs{flex-wrap:wrap;padding:.5rem .6rem .2rem}
+    .tab{font-size:1.1rem;padding:.5rem .9rem .6rem}
+    .spacer{display:none}
+  }
+</style>
 </head>
 <body>
-  <a href ="Kata.html">Random Kata for Training</a>
-  <a href ="/HIIT Generator 2.0/hiit.html">HIIT Workout randomizer</a>
-  <h1><a href = "testToast.html">Test AAC</a></h1>
+
+<div class="shell">
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Morning meeting"></nav>
+  <div class="stage" id="stage"></div>
+</div>
+
+<script>
+/* ===========================================================================
+   MORNING MEETING
+   ---------------------------------------------------------------------------
+   A tab for each part of the morning. Each one is its own page, loaded in
+   place — so the morning board stays exactly the file it already is, and
+   nothing here edits it.
+
+   To add, rename or reorder a tab, change the list below. "file" is the page
+   it opens; it must sit in this same folder.
+
+   A tab is only loaded the first time it is opened, and then it stays loaded,
+   so going back to the board does not restart its clock.
+   =========================================================================== */
+
+const TABS = [
+  { id:'board',      label:'Morning Board', icon:'\u{1F4CB}', file:'class-board-single.html' },
+  { id:'attendance', label:'Who is here',   icon:'\u{1F64B}', file:'attendance.html' },
+  { id:'calendar',   label:'Calendar',      icon:'\u{1F5D3}\u{FE0F}', file:'calendar.html' },
+  { id:'exercises',  label:'Exercises',     icon:'\u{1F938}', file:'exercises.html' }
+];
+
+const frames = {};
+let active = null;
+
+function show(id){
+  if (active === id) return;
+  const prev = active;
+  active = id;
+
+  TABS.forEach(t => {
+    const btn = document.getElementById('tab-' + t.id);
+    btn.setAttribute('aria-selected', String(t.id === id));
+  });
+
+  // make the frame the first time it is asked for, then keep it
+  if (!frames[id]){
+    const t = TABS.find(x => x.id === id);
+    const f = document.createElement('iframe');
+    f.src = t.file;
+    f.title = t.label;
+    f.setAttribute('allow', 'fullscreen; autoplay');
+    document.getElementById('stage').appendChild(f);
+    frames[id] = f;
+    checkExists(t);
+  }
+
+  Object.keys(frames).forEach(k => { frames[k].hidden = (k !== id); });
+
+  /* tell the page it left the screen, so a running exercise timer stops and
+     anything mid-sentence goes quiet instead of talking to an empty room */
+  if (prev && frames[prev]) post(frames[prev], 'hidden');
+  post(frames[id], 'shown');
+}
+
+function post(frame, what){
+  try { frame.contentWindow.postMessage({ mm: what }, '*'); } catch(e){}
+}
+
+/* When this is hosted, say plainly which file is missing rather than leaving
+   the browser's own error page inside the tab. Renaming the morning board, or
+   capitalising it differently from the line above, is the usual cause —
+   GitHub Pages is case sensitive even though a laptop is not. */
+function checkExists(t){
+  if (location.protocol === 'file:') return;          // can't be checked here
+  fetch(t.file, { method:'HEAD', cache:'no-store' })
+    .then(r => { if (!r.ok) showMissing(t); })
+    .catch(() => showMissing(t));
+}
+function showMissing(t){
+  const f = frames[t.id];
+  if (!f) return;
+  const d = document.createElement('div');
+  d.style.cssText = 'position:absolute;inset:0;display:grid;place-items:center;text-align:center;' +
+    'padding:10vh 8vw;background:#1D2E3D;color:#F0C46A;font:700 1.3rem/1.6 system-ui,sans-serif';
+  d.textContent = 'Could not find ' + t.file + ' — it must sit in the same folder as this page, ' +
+    'spelled exactly like this. If your morning board has a different filename, change the list at ' +
+    'the top of index.html to match.';
+  d.dataset.forTab = t.id;
+  f.replaceWith(d);
+  frames[t.id] = d;
+  const btn = document.getElementById('tab-' + t.id);
+  if (btn) btn.style.color = '#F0C46A';
+}
+
+TABS.forEach((t, i) => {
+  const b = document.createElement('button');
+  b.className = 'tab';
+  b.id = 'tab-' + t.id;
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', 'false');
+  b.innerHTML = '<span class="ic" aria-hidden="true"></span><span></span>';
+  b.querySelector('.ic').textContent = t.icon;
+  b.querySelector('span:last-child').textContent = t.label;
+  b.addEventListener('click', () => show(t.id));
+  document.getElementById('tabs').appendChild(b);
+  if (i === TABS.length - 1){
+    const sp = document.createElement('div'); sp.className = 'spacer';
+    document.getElementById('tabs').appendChild(sp);
+    const fs = document.createElement('button');
+    fs.className = 'chrome'; fs.title = 'Full screen'; fs.setAttribute('aria-label','Full screen');
+    fs.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5v2H6v3H4zm11-5h5v5h-2V6h-3V4zM4 15h2v3h3v2H4v-5zm14 0h2v5h-5v-2h3v-3z"/></svg>';
+    fs.addEventListener('click', () => {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen().catch(()=>{});
+    });
+    document.getElementById('tabs').appendChild(fs);
+  }
+});
+
+/* left and right arrows move between tabs, for a keyboard or a remote */
+document.addEventListener('keydown', e => {
+  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+  if (document.activeElement && document.activeElement.classList.contains('tab')){
+    const i = TABS.findIndex(t => t.id === active);
+    const n = (i + (e.key === 'ArrowRight' ? 1 : TABS.length - 1)) % TABS.length;
+    show(TABS[n].id);
+    document.getElementById('tab-' + TABS[n].id).focus();
+  }
+});
+
+show(TABS[0].id);
+</script>
 </body>
 </html>

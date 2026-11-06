@@ -1,38 +1,33 @@
 /* ===========================================================================
-   SCHOOL YEAR CALENDAR
+   SCHOOL YEAR
    ---------------------------------------------------------------------------
-   Two jobs: it tells the board which days there is no school, and which day
-   of your block rotation today is.
+   OPTIONAL. Your morning board already carries these dates inside itself, and
+   the Calendar tab will read them out of the board when this file is absent.
 
-   Dates are always year-month-day: 2026-09-07
+   Add this file only if you want the Calendar tab to shade days off when the
+   page is opened by double-clicking rather than from a web address. A browser
+   will not let a double-clicked page read another file, so that is the one
+   case the board cannot be read.
 
-   Line types:
+   If you do keep this file, it wins over the copy inside the board — which
+   means the year then lives in two places. Either delete this file, or
+   remember to change both.
 
-     first day, 2026-08-03            When the school year starts
-     last day,  2027-05-27            When it ends. Outside these, no school.
+   ---------------------------------------------------------------------------
+   Dates are year-month-day: 2026-12-25
+
+     first day, 2026-08-03          when the school year starts
+     last day,  2027-05-27          when it ends
 
      no school, 2026-09-07, Labor Day
      no school, 2026-10-05 to 2026-10-09, Fall Break
-                                      One date, or a range using "to".
-                                      The label shows on the board that day.
+                                    one date, or a range using "to"
 
-     cycle, A, B                      Your block rotation, in order. Could be
-                                      A, B — or 1, 2, 3, 4, 5, 6 — or
-                                      Blue, Gold. Leave this line out if your
-                                      schedule is the same every week.
-     cycle start, 2026-08-03          The first school day of the rotation.
+   The label shows on that day in the month grid, and on the day card.
+   A line starting with # is ignored.
 
-     day, 2026-09-14, A               Force one date to a particular day of the
-                                      rotation, for when an assembly or a
-                                      cancellation knocks the cycle out of step.
-
-   Weekends are always off — you don't need to list them. Days off are skipped
-   when counting the rotation, so a Monday holiday does not flip your A and B
-   days for the rest of the year.
-
-   The dates below are the Hawaii State Department of Education official
-   2026-2027 calendar, amended March 30, 2026. Check them against what your
-   school sent home — individual campuses add their own days.
+   These are the Hawaii State Department of Education official 2026-2027
+   dates, amended March 30, 2026 — the same ones already in your board.
    =========================================================================== */
 
 window.SCHOOL_CALENDAR = `
@@ -56,20 +51,10 @@ no school, 2027-03-29, Prince Kuhio Day
 no school, 2027-05-31, Memorial Day
 
 # HIDOE sets one Institute Day during February 8-12 with no students, and the
-# date is chosen per island. Add yours here once your school announces it:
+# date is picked per island. Add yours once your school announces it:
 # no school, 2027-02-10, Institute Day
 
 # Your own campus days go here too:
 # no school, 2026-10-16, Teacher Work Day
 # no school, 2027-04-02, Parent Conferences
-
-# ---------------------------------------------------------------------------
-# BLOCK ROTATION
-# Delete the # marks below and change the labels to match your school.
-# ---------------------------------------------------------------------------
-# cycle, A, B
-# cycle start, 2026-08-03
-#
-# When a fire drill or a snow-in-Hawaii miracle knocks the cycle off, pin it:
-# day, 2026-09-14, A
 `;
